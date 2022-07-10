@@ -74,10 +74,7 @@ class CVAE(keras.Model):
         if isinstance(data, tuple):
             data = data[0]
         with tf.GradientTape() as tape:
-            print(data[1].shape)
             input_img, input_label, conditional_input = self.conditional_input(data)
-            batch_size = input_img.shape[0]
-            print('batch_size', batch_size)
             z_mean, z_log_var = self.encoder(conditional_input)
             z_cond = self.sampling(z_mean, z_log_var, input_label)
             reconstruction = self.decoder(z_cond)

@@ -77,7 +77,7 @@ class DecoderResNet(keras.Model):
         self.pre_reshape = layers.Dense(2*2*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(2, 2, 512), name = 'reshape')
         self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=1, strides=1, activation='sigmoid' ,padding='valid', name='outputs')
-        self.upsample = layers.UpSampling2D(4)
+        self.upsample = layers.UpSampling2D(2)
 
     def call(self, input):
         #input = self.bottleneck(input)
@@ -105,3 +105,53 @@ class DecoderResNet18(DecoderResNet):
     def model(self, input_shape):
         x = keras.Input(input_shape, name='input')
         return keras.models.Model(x, self.call(x))
+
+def decoderCNN(input_shape, label_size=10, encoded_dim = 2): 
+
+    decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
+                                 name='decoder_input')
+    x = layers.Dense(encoded_dim)
+
+    x = layers.Dense(encoded_dim * 2 )
+ 
+    x = layers.Dense(input_shape[0]/2 * input_shape[1]/2 *64)(decoder_inputs)
+   
+    x = layers.Reshape(target_shape=(int(input_shape[0]/2),
+                     int(input_shape[1]/2), 64))(x)
+    x = bn_relu(x) 
+    x = layers.Conv2DTranspose(64, (3, 3),
+                      padding='same',
+                      name='up_block4_conv1')(x)
+    x = layers.Conv2DTranspose(64, (3, 3),
+                    padding='same',
+                    name='up_block4_conv2')(x)  
+    x = bn_relu(x) 
+    # block 2
+    x = layers.Conv2DTranspose(32, (3, 3),
+                      padding='same',
+                      name='up_block5_conv1')(x)
+    x = layers.Conv2DTranspose(32, (3, 3),
+                      padding='same',
+                      name='up_block5_conv2')(x)
+    x = bn_relu(x) 
+    x = layers.UpSampling2D()(x)
+    
+    # block 3
+    x = layers.Conv2DTranspose(16, (3, 3),
+                      padding='same',
+                      name='up_block6_conv1')(x)
+
+    x = layers.Conv2DTranspose(16, (3, 3),
+                    padding='same',
+                    name='up_block6_conv2')(x)
+    x = bn_relu(x)                                
+    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=2,
+                             strides=1, activation='sigmoid',padding='same')(x)
+
+    model = keras.Model(decoder_inputs, outputs, name='decoder')
+    return model
+
+def bn_relu(inputs):
+    bn = layers.BatchNormalization()(inputs)
+    relu = layers.LeakyReLU(0.2)(bn)
+    return(relu)
