@@ -7,15 +7,10 @@ simplefilter(action='ignore', category=FutureWarning)
 
 # TO DO: add log_var visualization maybe?
 
-def embedding(model, encoded_dim, category_count, train_x, test_x, val_x, train_y, test_y, val_y,
-             train_y_one_hot,  test_y_one_hot, val_y_one_hot, labels, xy_lim = 3, quantity = 5000, avg_latent=False):
-    _, _, train_input = model.conditional_input([train_x, train_y_one_hot])
-    _, _, test_input = model.conditional_input([test_x, test_y_one_hot])
-    _, _, val_input = model.conditional_input([val_x, val_y_one_hot])
+def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y,
+             train_log_var, test_log_var, val_log_var, labels, xy_lim = 80, quantity = 5000, avg_latent=True):
 
-    train_x_mean, train_log_var = model.encoder.predict(train_input)
-    test_x_mean, test_log_var = model.encoder.predict(test_input)
-    val_x_mean, val_log_var = model.encoder.predict(val_input)
+
 
     if encoded_dim == 2:
         plot_2d_data( [train_x_mean, test_x_mean, val_x_mean],
@@ -52,7 +47,7 @@ def embedding(model, encoded_dim, category_count, train_x, test_x, val_x, train_
       latent_mean = [avg_mean_train, avg_mean_test, avg_mean_val]
 
       plot_latent_variables(latent_variance, latent_mean)
-        
+    
 def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7), xy_lim = 3):
   _, axs = plt.subplots(1, len(data_2d), figsize = figsize)
 
