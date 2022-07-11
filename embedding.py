@@ -27,11 +27,11 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
         test_x_tsne = tsne.fit_transform(test_x_mean[:quantity])
         val_x_tsne = tsne.fit_transform(val_x_mean[:quantity])
         plot_2d_data( [train_x_tsne, test_x_tsne, val_x_tsne],
-                [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]],
+                [train_y[:quantity], test_y[:quantity], val_y[:quantity]],
                 ['Train','Test', 'Validation'], (12,4), xy_lim )
         plot_2d_data_categorical( [train_x_tsne, test_x_tsne, val_x_tsne],
                 [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
-                ['Train','Test', 'Validation'],  (12, 4 * category_count), category_count, xy_lim)
+                ['Train','Test', 'Validation'], (12, 4 * category_count), category_count, xy_lim)
 
     if avg_latent:
       import tensorflow as tf
@@ -74,7 +74,6 @@ def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), 
         index = find_indices(y[i], lambda e: e == k)
 
         data_2d_k = data_2d[i][index, ]
-        #y_k = y[i][index]
 
         if (titles != None):
           axs[k,i].set_title("{} - Class: {}".format(titles[i], labels[k]))

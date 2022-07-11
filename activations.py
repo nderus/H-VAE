@@ -11,7 +11,7 @@ class VisualizeActivations():
         self.test_x = test_x
         self.test_y_one_hot = test_y_one_hot
 
-    def visualize_activations(self):
+    def visualize_activations(self, model):
         test = self.test_x[0]
         plt.imshow(test)
         test = np.expand_dims(test, axis=0)
@@ -25,7 +25,7 @@ class VisualizeActivations():
         for layer in self.model.layers[1:]:
             
             try: 
-                layer_outputs.append(layer.get_output_at(1))
+                layer_outputs.append(layer.get_output_at(0)) #N: this depends on the architecture
                 layer_names.append(layer.name)
             
             except:
@@ -33,19 +33,19 @@ class VisualizeActivations():
                 layer_names.append(layer.name)
 
         # Creates a model that will return these outputs, given the model input:
-        activation_model = models.Model(inputs=  self.model.input, outputs=layer_outputs)
+        activation_model = models.Model(inputs= model.input, outputs=layer_outputs)
         
         # This will return a list of 5 Numpy arrays:
         # one array per layer activation
-        if 'encoder' in self.model.name:
-            _, input_label, conditional_input = self.model.conditional_input(img_tensor)
+        if 'encoder' in model.name:
+            _, input_label, conditional_input = model.conditional_input(img_tensor)
             activations = activation_model.predict(conditional_input) #for encoder
 
-        if 'decoder' in self.model.name:
-            _, input_label, conditional_input = self.model.conditional_input(img_tensor)
+        if 'decoder' in model.name:
+            _, input_label, conditional_input = model.conditional_input(img_tensor)
             input_label = np.expand_dims(input_label, axis=0)
-            z_mean, z_log_var = self.model.encoder(conditional_input)
-            z_cond = self.model.sampling(z_mean, z_log_var, input_label)
+            z_mean, z_log_var = model.encoder(conditional_input)
+            z_cond = model.sampling(z_mean, z_log_var, input_label)
             
             activations = activation_model.predict(z_cond) #for decoder
         
@@ -55,7 +55,7 @@ class VisualizeActivations():
         
         for _, (activation, name) in enumerate(zip(activations[0:], layer_names[0:])):
             print(name)
-            self.plot_filters(activation, name, model_name=self.model.name)
+            self.plot_filters(activation, name, model_name=model.name)
 
     def plot_filters(activation_layer, layer_name, model_name):
 

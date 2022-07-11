@@ -4,13 +4,13 @@ import tensorflow as tf #could sub this
 import numpy as np #also probably
 
 class CVAE(keras.Model):
-    def __init__(self, encoder, decoder, beta, shape, **kwargs):
+    def __init__(self, encoder, decoder, beta, shape, category_count, **kwargs):
         super(CVAE, self).__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
         self.beta = beta
         self.shape = shape
-        self.latent_var = []
+        self.category_count = category_count
         self.total_loss_tracker = keras.metrics.Mean(name="loss")
         self.reconstruction_loss_tracker = keras.metrics.Mean(
             name="reconstruction_loss"
@@ -45,15 +45,15 @@ class CVAE(keras.Model):
         return self.decoder(z_cond)
 
   
-    def conditional_input(self, inputs, label_size=10):
+    def conditional_input(self, inputs):
         image_size = [self.shape[0], self.shape[1], self.shape[2]]
         input_img = layers.InputLayer(input_shape=image_size,
                                     dtype ='float32')(inputs[0])
-        input_label = layers.InputLayer(input_shape=(label_size, ),
+        input_label = layers.InputLayer(input_shape=(self.category_count, ),
                                         dtype ='float32')(inputs[1])
-        labels = tf.reshape(inputs[1], [-1, 1, 1, label_size])
+        labels = tf.reshape(inputs[1], [-1, 1, 1, self.category_count])
         labels = tf.cast(labels, dtype='float32')
-        ones = tf.ones([inputs[0].shape[0]] + image_size[0:-1] + [label_size])
+        ones = tf.ones([inputs[0].shape[0]] + image_size[0:-1] + [self.category_count])
         labels = ones * labels
 
         conditional_input = layers.Concatenate(axis=3)([input_img, labels]) 

@@ -67,7 +67,7 @@ class DecoderResNet(keras.Model):
         ], name='layer8')
 
         self.layer9 = keras.Sequential([
-                layers.Conv2DTranspose(64, 7, 1, padding='same'),
+                layers.Conv2DTranspose(64, 7, 1, padding='same', use_bias = False),
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
                 layers.ReLU()
@@ -77,7 +77,7 @@ class DecoderResNet(keras.Model):
         self.pre_reshape = layers.Dense(2*2*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(2, 2, 512), name = 'reshape')
         self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=1, strides=1, activation='sigmoid' ,padding='valid', name='outputs')
-        self.upsample = layers.UpSampling2D(2)
+        self.upsample = layers.UpSampling2D(4)
 
     def call(self, input):
         #input = self.bottleneck(input)
