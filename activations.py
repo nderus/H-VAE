@@ -25,7 +25,7 @@ class VisualizeActivations():
         for layer in self.model.layers[1:]:
             
             try: 
-                layer_outputs.append(layer.get_output_at(0)) #N: this depends on the architecture
+                layer_outputs.append(layer.get_output_at(0)) #N: this depends on the architecture, resnet = , CNN =
                 layer_names.append(layer.name)
             
             except:
