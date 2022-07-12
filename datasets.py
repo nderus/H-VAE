@@ -108,6 +108,28 @@ def data_loader(name, root_folder):
         input_shape = (64, 64, 3)
                               
         labels = ['non-cancer','cancer']
+    
+    elif name.lower() == 'experimental':
+        import tensorflow_datasets as tfds
+        import tensorflow as tf
+        (train_ds, val_ds), info = tfds.load("histo", split=[ "cancer[:30000] + non-cancer[:30000]", "cancer[30000:40000] + non-cancer[30000:40000]"], as_supervised=True, shuffle_files=False, with_info=True)
+
+        train_ds = train_ds.map(
+                normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+        val_ds = val_ds.map(
+                normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
+
+        train_ds = train_ds.batch(128).map(lambda x, y: (x, tf.one_hot(y, depth=3))).repeat()
+        train_ds = train_ds.cache()
+        train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+
+        val_ds = val_ds.batch(128).map(lambda x, y: (x, tf.one_hot(y, depth=3))).repeat()
+        val_ds = val_ds.cache()
+        val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+        input_shape = (64, 64, 3)
+        labels = ['non-cancer','cancer']
+        category_count = 2
+        return train_ds, val_ds, input_shape, category_count, labels
 
     else:
         raise Exception('No such dataset called {}.'.format(name))
@@ -131,3 +153,7 @@ def get_image_arrays(data, label):
 def resize(data):
     data = data / 255.0
     return(data)
+
+def normalize_img(image, label):
+    import tensorflow as tf
+    return tf.cast(image, tf.float32) / 255., label

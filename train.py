@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import os
@@ -12,7 +12,7 @@ import wandb
 from wandb.keras import WandbCallback
 
 
-# In[ ]:
+# In[2]:
 
 
 from encoders import EncoderResNet18, encoderCNN
@@ -27,31 +27,41 @@ from src.CVAE import CVAE
 backend.clear_session()
 
 
-# In[ ]:
+# In[3]:
 
 
 # TO DO: this should be passed as arguments
 dataset_name = 'histo'
-model_name = 'CVAE'
+model_name = 'CVAE_resnet'
 kl_coefficient = 0.
-encoded_dim = 512
+encoded_dim = 256
 learning_rate = 0.0001 
 epoch_count = 100
 batch_size = 100
 patience = 5
 
 
+# In[4]:
+
+
+if dataset_name == 'experimental':
+    #TO DO: move datasets in the repo and change root_folder
+
+    train_ds, val_ds, input_shape, category_count, labels = data_loader(name=dataset_name, root_folder='/home/PERSONALE/nicolas.derus2/HistoDL/datasets/')
+else:
+    #TO DO: move datasets in the repo and change root_folder
+
+    train_x, test_x, val_x, train_y, test_y, val_y, train_y_one_hot, test_y_one_hot, val_y_one_hot, input_shape, category_count, labels = data_loader(name=dataset_name,
+                                                                                                                                        root_folder='/home/PERSONALE/nicolas.derus2/HistoDL/datasets/')
+
+
 # In[ ]:
 
 
-#TO DO: move datasets in the repo and change root_folder
-
-train_x, test_x, val_x, train_y, test_y, val_y, train_y_one_hot, test_y_one_hot, val_y_one_hot, input_shape, category_count, labels = data_loader(name=dataset_name,
-                                                                                                                                     root_folder='/home/PERSONALE/nicolas.derus2/HistoDL/datasets/')
 
 
-# In[ ]:
 
+# In[5]:
 
 
 wandb.init(project="HistoDL", entity="nrderus",
@@ -73,7 +83,7 @@ wandb.init(project="HistoDL", entity="nrderus",
 
 
 
-# In[ ]:
+# In[6]:
 
 
 if 'resnet' in model_name:
@@ -85,7 +95,7 @@ else:
 encoder
 
 
-# In[ ]:
+# In[7]:
 
 
 if 'resnet' in model_name:
@@ -97,7 +107,7 @@ else:
 decoder
 
 
-# In[ ]:
+# In[8]:
 
 
 try:
@@ -130,7 +140,7 @@ except:
     cvae.compile(optimizer = opt, run_eagerly=False)
 
 
-# In[ ]:
+# In[9]:
 
 
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -177,15 +187,20 @@ generator()
 # In[ ]:
 
 
-
-activations = VisualizeActivations(cvae, test_x, test_y_one_hot)
-activations()
+wandb.finish(exit_code=0, quiet = True) 
 
 
 # In[ ]:
 
 
-wandb.finish(exit_code=0, quiet = True) 
+# activations = VisualizeActivations(cvae, test_x, test_y_one_hot)
+# activations()
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
