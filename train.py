@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -12,11 +12,11 @@ import wandb
 from wandb.keras import WandbCallback
 
 
-# In[2]:
+# In[ ]:
 
 
-from encoders import EncoderResNet18, encoderCNN
-from decoders import DecoderResNet18, decoderCNN
+from encoders import EncoderResNet18, EncoderResNet34, encoderCNN
+from decoders import DecoderResNet18, DecoderResNet34, decoderCNN
 from datasets import data_loader
 from embedding import embedding
 from reconstructions import reconstructions
@@ -27,21 +27,21 @@ from src.CVAE import CVAE
 backend.clear_session()
 
 
-# In[3]:
+# In[ ]:
 
 
 # TO DO: this should be passed as arguments
 dataset_name = 'histo'
-model_name = 'CVAE_resnet'
-kl_coefficient = 0.
-encoded_dim = 256
+model_name = 'CVAE'
+kl_coefficient = 0.002
+encoded_dim = 768
 learning_rate = 0.0001 
 epoch_count = 100
 batch_size = 100
 patience = 5
 
 
-# In[4]:
+# In[ ]:
 
 
 if dataset_name == 'experimental':
@@ -61,7 +61,7 @@ else:
 
 
 
-# In[5]:
+# In[ ]:
 
 
 wandb.init(project="HistoDL", entity="nrderus",
@@ -83,7 +83,7 @@ wandb.init(project="HistoDL", entity="nrderus",
 
 
 
-# In[6]:
+# In[ ]:
 
 
 if 'resnet' in model_name:
@@ -92,10 +92,10 @@ if 'resnet' in model_name:
 else:
     encoder = encoderCNN(input_shape, category_count, encoded_dim)
 
-encoder
+encoder.summary()
 
 
-# In[7]:
+# In[ ]:
 
 
 if 'resnet' in model_name:
@@ -104,10 +104,10 @@ if 'resnet' in model_name:
 else:
     decoder = decoderCNN(input_shape, category_count, encoded_dim)
 
-decoder
+decoder.summary()
 
 
-# In[8]:
+# In[ ]:
 
 
 try:
@@ -140,7 +140,7 @@ except:
     cvae.compile(optimizer = opt, run_eagerly=False)
 
 
-# In[9]:
+# In[ ]:
 
 
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -187,43 +187,14 @@ generator()
 # In[ ]:
 
 
+activations_encoder = VisualizeActivations(cvae, cvae.encoder, test_x, test_y_one_hot)
+activations_decoder = VisualizeActivations(cvae, cvae.decoder, test_x, test_y_one_hot)
+activations_encoder()
+activations_decoder()
+
+
+# In[ ]:
+
+
 wandb.finish(exit_code=0, quiet = True) 
-
-
-# In[ ]:
-
-
-# activations = VisualizeActivations(cvae, test_x, test_y_one_hot)
-# activations()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-#filters
-
-
-# In[ ]:
-
-
-import matplotlib.pyplot as plt
-plt.cm.tab10
-
-
-# In[ ]:
-
-
-
 

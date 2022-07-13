@@ -1,6 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
-
+#NB: original had relu and upsample(4)
 class DecoderResBlock(keras.Model):
     def __init__(self, filters, upsample):
         super().__init__()
@@ -21,15 +21,15 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input = layers.Activation('swish')(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input = layers.Activation('swish')(input)
 
 
         input = input + shortcut
-        return layers.LeakyReLU(0.2)(input)
+        return layers.Activation('swish')(input)
 
 
 class DecoderResNet(keras.Model):
@@ -67,7 +67,7 @@ class DecoderResNet(keras.Model):
                 layers.Conv2DTranspose(64, 7, 2, padding='same', use_bias = False), #was 1
                 layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                layers.LeakyReLU()
+                layers.Activation('swish')
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
