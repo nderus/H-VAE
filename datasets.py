@@ -119,11 +119,11 @@ def data_loader(name, root_folder):
         val_ds = val_ds.map(
                 normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
 
-        train_ds = train_ds.batch(128).map(lambda x, y: (x, tf.one_hot(y, depth=3))).repeat()
+        train_ds = train_ds.batch(100).map(lambda x, y: (x, tf.one_hot(y, depth=2))).repeat()
         train_ds = train_ds.cache()
         train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
-        val_ds = val_ds.batch(128).map(lambda x, y: (x, tf.one_hot(y, depth=3))).repeat()
+        val_ds = val_ds.batch(100).map(lambda x, y: (x, tf.one_hot(y, depth=2))).repeat()
         val_ds = val_ds.cache()
         val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
         input_shape = (64, 64, 3)

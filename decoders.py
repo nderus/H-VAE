@@ -21,14 +21,16 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
+
 
         input = input + shortcut
-        return layers.ReLU()(input)
+        return layers.LeakyReLU(0.2)(input)
+
 
 class DecoderResNet(keras.Model):
     def __init__(self, resblock, repeat, encoded_dim):
@@ -37,47 +39,43 @@ class DecoderResNet(keras.Model):
         self.layer5 = keras.Sequential([
             resblock(512, upsample=False)
         ] + [
-            resblock(512, upsample=False)  for _ in range(1, repeat[0])
+            resblock(512, upsample=False)  for _ in range(1, repeat[3])
         ], name='layer5')
 
 
         self.layer6 = keras.Sequential([
             resblock(256, upsample=True)
         ] + [
-            resblock(256, upsample=False) for _ in range(1, repeat[1])
+            resblock(256, upsample=False) for _ in range(1, repeat[2])
         ], name='layer6')
 
 
         self.layer7 = keras.Sequential([
             resblock(128, upsample=True)
         ] + [
-            resblock(128, upsample=False) for _ in range(1, repeat[2])
+            resblock(128, upsample=False) for _ in range(1, repeat[1])
         ], name='layer7')
         
-        # self.layer7 = keras.Sequential([ # TO DO: change back this into resblock, heigth/depth issue
-        #     layers.Conv2DTranspose(128, 4, 1, padding='valid'),
-        #     #layers.BatchNormalization(),
-        #     layers.ReLU()
-        # ], name='layer7')
 
         self.layer8 =  keras.Sequential([ 
             resblock(64, upsample=True)
         ] + [
-            resblock(64, upsample=False) for _ in range(repeat[3])
+            resblock(64, upsample=False) for _ in range(repeat[0]) 
         ], name='layer8')
 
         self.layer9 = keras.Sequential([
-                layers.Conv2DTranspose(64, 7, 1, padding='same', use_bias = False),
-                #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
+                layers.Conv2DTranspose(64, 7, 2, padding='same', use_bias = False), #was 1
+                layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                layers.ReLU()
+                layers.LeakyReLU()
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
         self.pre_reshape = layers.Dense(2*2*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(2, 2, 512), name = 'reshape')
-        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=1, strides=1, activation='sigmoid' ,padding='valid', name='outputs')
-        self.upsample = layers.UpSampling2D(4)
+        self.upsample = layers.UpSampling2D(2)
+        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=1, strides=2, activation='sigmoid' ,padding='valid', name='outputs')
+
 
     def call(self, input):
         #input = self.bottleneck(input)
@@ -98,6 +96,17 @@ class DecoderResNet(keras.Model):
 class DecoderResNet18(DecoderResNet):
     def __init__(self, encoded_dim):
         super().__init__(DecoderResBlock, [2, 2, 2, 2], encoded_dim)
+
+    def call(self, input):
+        return super().call(input)
+
+    def model(self, input_shape):
+        x = keras.Input(input_shape, name='input')
+        return keras.models.Model(x, self.call(x), name='decoder')
+
+class DecoderResNet34(DecoderResNet):
+    def __init__(self, encoded_dim):
+        super().__init__(DecoderResBlock, [3, 4, 6, 3], encoded_dim)
 
     def call(self, input):
         return super().call(input)
