@@ -52,13 +52,13 @@ class VisualizeActivations():
             
             activations = activation_model.predict(z_cond) #for decoder
         
-        for activation, name in zip(activations[0:], layer_names[0:]):
-            print(name)
-            print(activation.shape)
+        # for activation, name in zip(activations[0:], layer_names[0:]):
+        #     print(name)
+        #     print(activation.shape)
         
         for _, (activation, name) in enumerate(zip(activations[0:], layer_names[0:])):
-            print(name)
-            print(model.name)
+            # print(name)
+            # print(model.name)
             self.plot_filters(activation, name, model_name = model.name)
 
     def plot_filters(self, activation_layer, layer_name, model_name):
@@ -66,6 +66,7 @@ class VisualizeActivations():
         if len(activation_layer.shape) == 2: # if flat layer
             print('flat')
             return None
+
         n = math.floor(np.sqrt(activation_layer.shape[3]))
 
         if int(n + 0.5) ** 2 == activation_layer.shape[3]:
