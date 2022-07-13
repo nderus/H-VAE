@@ -88,8 +88,8 @@ class DecoderResNet(keras.Model):
         input = self.layer7(input)
         input = self.layer8(input)
         input = self.layer9(input)
-        input = self.output_layer(input)
-        out = self.upsample(input)
+        input = self.upsample(input)
+        out = self.output_layer(input)
         return out
 
     def get_config(self):
