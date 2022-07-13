@@ -7,10 +7,10 @@ import math
 import wandb
 
 class VisualizeActivations():
-    def __init__(self, main_model, encoder, decoder, test_x, test_y_one_hot):
+    def __init__(self, main_model, encoder, test_x, test_y_one_hot):
         self.main_model = main_model
         self.encoder = encoder
-        self.decoder = decoder
+        #self.decoder = decoder
         self.test_x = test_x
         self.test_y_one_hot = test_y_one_hot
 
@@ -37,24 +37,32 @@ class VisualizeActivations():
 
         # Creates a model that will return these outputs, given the model input:
         activation_model = models.Model(inputs= model.input, outputs=layer_outputs)
-        
+  
+        print(model.name)
         # This will return a list of 5 Numpy arrays:
         # one array per layer activation
         if 'encoder' in model.name:
-            _, input_label, conditional_input = main_model.conditional_input(img_tensor) # TO DO: input the cvae as parameter and make it clear is different from encoder,decoder
+            
+            _, input_label, conditional_input = main_model.conditional_input(img_tensor) 
             activations = activation_model.predict(conditional_input) #for encoder
+            print('encoder activations:', len(activations))
 
-        if 'decoder' in model.name:
+        elif 'decoder' in model.name:
             _, input_label, conditional_input = main_model.conditional_input(img_tensor)
             input_label = np.expand_dims(input_label, axis=0)
             z_mean, z_log_var = main_model.encoder(conditional_input)
             z_cond = main_model.sampling(z_mean, z_log_var, input_label)
-            
             activations = activation_model.predict(z_cond) #for decoder
+            print('decoder activations', len(activations))
+
+        else:
+            return 'Error: model name not found'
+            
         
-        # for activation, name in zip(activations[0:], layer_names[0:]):
-        #     print(name)
-        #     print(activation.shape)
+        for activation, name in zip(activations[0:], layer_names[0:]):
+            print(name)
+            print(activation.shape)
+
         
         for _, (activation, name) in enumerate(zip(activations[0:], layer_names[0:])):
             # print(name)
@@ -66,7 +74,6 @@ class VisualizeActivations():
         if len(activation_layer.shape) == 2: # if flat layer
             print('flat')
             return None
-
         n = math.floor(np.sqrt(activation_layer.shape[3]))
 
         if int(n + 0.5) ** 2 == activation_layer.shape[3]:
@@ -81,7 +88,6 @@ class VisualizeActivations():
 
             ax.imshow(activation_layer[0,:, :, 0], cmap='viridis')
             wandb.log({"Activations": wandb.Image(plt, caption="{}_{}".format(model_name, layer_name)) })
-    
             return None   
 
         if n == 1:
@@ -107,5 +113,6 @@ class VisualizeActivations():
         return None
 
     def __call__(self):
+        #self.visualize_activations(self.main_model, self.decoder)
         self.visualize_activations(self.main_model, self.encoder)
-        self.visualize_activations(self.main_model, self.decoder)
+        

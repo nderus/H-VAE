@@ -104,7 +104,7 @@ class DecoderResNet18(DecoderResNet):
 
     def model(self, input_shape):
         x = keras.Input(input_shape, name='input')
-        return keras.models.Model(x, self.call(x))
+        return keras.models.Model(x, self.call(x), name='decoder')
 
 def decoderCNN(input_shape, label_size=10, encoded_dim = 2): 
 
