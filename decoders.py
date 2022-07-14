@@ -64,8 +64,8 @@ class DecoderResNet(keras.Model):
         ], name='layer8')
 
         self.layer9 = keras.Sequential([
-                layers.Conv2DTranspose(64, 7, 2, padding='same', use_bias = False), #was 1
-                layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
+                layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
+                #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
                 layers.Activation('swish')
             ], name='layer9')
@@ -74,7 +74,7 @@ class DecoderResNet(keras.Model):
         self.pre_reshape = layers.Dense(4*4*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(4, 4, 512), name = 'reshape')
         self.upsample = layers.UpSampling2D(2)
-        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=1, strides=2, activation='sigmoid' ,padding='valid', name='outputs')
+        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=3, strides=2, activation='sigmoid',padding='same', name='outputs')
 
 
     def call(self, input):
@@ -154,7 +154,7 @@ def decoderCNN(input_shape, label_size=10, encoded_dim = 2):
                     padding='same',
                     name='up_block6_conv2')(x)
     x = bn_relu(x)                                
-    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=2,
+    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=3,
                              strides=1, activation='sigmoid',padding='same')(x)
 
     model = keras.Model(decoder_inputs, outputs, name='decoder')
