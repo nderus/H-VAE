@@ -1,7 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 
-# TO DO: - swish activ function is incredibly slow, find alternative
 
 class EncoderResBlock(keras.Model):
     def __init__(self, filters, downsample):
@@ -28,11 +27,11 @@ class EncoderResBlock(keras.Model):
         #input = layers.Activation('swish')(input)
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLu()(input)
+        input = layers.ReLU()(input)
         #input = layers.Activation('swish')(input)
 
         input= input + shortcut
-        return layers.ReLu()(input)
+        return layers.ReLU()(input)
 
 
 class EncoderResNet(keras.Model):
