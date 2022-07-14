@@ -21,15 +21,15 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU(input)
+        input = layers.ReLU()(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU(input)
+        input = layers.ReLU()(input)
 
 
         input = input + shortcut
-        return layers.ReLU(input)
+        return layers.ReLU()(input)
 
 
 class DecoderResNet(keras.Model):
@@ -67,7 +67,7 @@ class DecoderResNet(keras.Model):
                 layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                layers.ReLU(input)
+                layers.ReLU()
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')

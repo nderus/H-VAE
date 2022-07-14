@@ -24,7 +24,7 @@ class EncoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU()(inputs)
+        input = layers.ReLU()(input)
         #input = layers.Activation('swish')(input)
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
