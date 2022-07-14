@@ -24,13 +24,15 @@ class EncoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.Activation('swish')(input)
+        input = layers.ReLU(input)
+        #input = layers.Activation('swish')(input)
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.Activation('swish')(input)
+        input = layers.ReLu()(input)
+        #input = layers.Activation('swish')(input)
 
         input= input + shortcut
-        return layers.Activation('swish')(input)
+        return layers.ReLu()(input)
 
 
 class EncoderResNet(keras.Model):
@@ -42,7 +44,7 @@ class EncoderResNet(keras.Model):
             layers.Conv2D(64, 5, 2, padding='same'),
             layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
             layers.BatchNormalization(),
-            layers.Activation('swish')
+            layers.ReLU()
         ], name='layer0')
 
         self.layer1 = keras.Sequential([
@@ -117,21 +119,21 @@ class ResBottleneckBlock(keras.Model): #check this
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.Activation('swish')(input)
-        #input = layers.ReLU()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.Activation('swish')(input)
-        #input = layers.ReLU()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
 
         input = self.conv3(input)
         input = layers.BatchNormalization()(input)
-        input = layers.Activation('swish')(input)
-        #input = layers.ReLU()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
 
         input = input + shortcut
-        return layers.Activation('swish')(input) #was  layers.ReLU()(input)
+        return layers.ReLU()(input)
 
 class EncoderResNet18(EncoderResNet):
     def __init__(self, encoded_dim):
