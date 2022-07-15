@@ -92,6 +92,48 @@ class DecoderResNet(keras.Model):
 
     def get_config(self):
         return super().get_config()
+class ResBottleneckBlock(keras.Model): #check this
+    def __init__(self, filters, downsample):
+        super().__init__()
+        self.downsample = downsample
+        self.filters = filters
+        self.conv1 = layers.Conv2D(filters, 1, 1)
+        if downsample:
+            self.conv2 = layers.Conv2D(filters, 3, 2, padding='same')
+        else:
+            self.conv2 = layers.Conv2D(filters, 3, 1, padding='same')
+        self.conv3 = layers.Conv2D(filters*4, 1, 1)
+
+    def build(self, input_shape):
+        if self.downsample or self.filters * 4 != input_shape[-1]:
+            self.shortcut = keras.Sequential([
+                layers.Conv2D(
+                    self.filters*4, 1, 2 if self.downsample else 1, padding='same'),
+                layers.BatchNormalization()
+            ])
+        else:
+            self.shortcut = keras.Sequential()
+
+    def call(self, input):
+        shortcut = self.shortcut(input)
+
+        input = self.conv1(input)
+        input = layers.BatchNormalization()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
+
+        input = self.conv2(input)
+        input = layers.BatchNormalization()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
+
+        input = self.conv3(input)
+        input = layers.BatchNormalization()(input)
+        #input = layers.Activation('swish')(input)
+        input = layers.ReLU()(input)
+
+        input = input + shortcut
+        return layers.ReLU()(input)
 
 class DecoderResNet18(DecoderResNet):
     def __init__(self, encoded_dim):
@@ -114,6 +156,19 @@ class DecoderResNet34(DecoderResNet):
     def model(self, input_shape):
         x = keras.Input(input_shape, name='input')
         return keras.models.Model(x, self.call(x), name='decoder')
+
+
+class DecoderResNet50(DecoderResNet):
+    def __init__(self, encoded_dim):
+        super().__init__(ResBottleneckBlock,  [3, 4, 6, 3], encoded_dim)
+
+    def call(self, input):
+        return super().call(input)
+
+    def model(self, input_shape):
+        x = layers.Input(input_shape, name='input', dtype='float32')
+        return keras.models.Model(x, self.call(x), name='encoder')
+
 
 def decoderCNN(input_shape, label_size=10, encoded_dim = 2): 
 

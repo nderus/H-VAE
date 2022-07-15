@@ -8,17 +8,17 @@ simplefilter(action='ignore', category=FutureWarning)
 # TO DO: add log_var visualization maybe?
 
 def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y,
-             train_log_var, test_log_var, val_log_var, labels, xy_lim = 80, quantity = 5000, avg_latent=True):
+             train_log_var, test_log_var, val_log_var, labels, quantity = 5000, avg_latent=True):
 
 
 
     if encoded_dim == 2:
-        plot_2d_data( [train_x_mean, test_x_mean, val_x_mean],
-                    [train_y, test_y ,val_y],
+        plot_2d_data( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
+                    [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]],
                     ['Train','Test', 'Validation'], figsize = (12,4))
-        plot_2d_data_categorical( [train_x_mean, test_x_mean, val_x_mean],
-                    [train_y, test_y ,val_y],
-                    ['Train','Test', 'Validation'], figsize = (12, 4 * category_count))
+        plot_2d_data_categorical( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
+                    [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
+                    ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     else:
         from sklearn import manifold
@@ -28,10 +28,10 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
         val_x_tsne = tsne.fit_transform(val_x_mean[:quantity])
         plot_2d_data( [train_x_tsne, test_x_tsne, val_x_tsne],
                 [train_y[:quantity], test_y[:quantity], val_y[:quantity]],
-                ['Train','Test', 'Validation'], (12,4), xy_lim )
+                ['Train','Test', 'Validation'], (12,4) )
         plot_2d_data_categorical( [train_x_tsne, test_x_tsne, val_x_tsne],
                 [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
-                ['Train','Test', 'Validation'], (12, 4 * category_count), category_count, xy_lim)
+                ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     if avg_latent:
       import tensorflow as tf
@@ -48,7 +48,7 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
 
       plot_latent_variables(latent_variance, latent_mean)
     
-def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7), xy_lim = 3):
+def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7)):
   _, axs = plt.subplots(1, len(data_2d), figsize = figsize)
 
   for i in range(len(data_2d)):
@@ -57,16 +57,18 @@ def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7), xy_lim = 3):
       axs[i].set_title(titles[i])
     
     scatter=axs[i].scatter(data_2d[i][:, 0], data_2d[i][:, 1],
-                            s = 1, c = y[i], cmap = plt.cm.tab10)
-    axs[i].set_xlim([-xy_lim, xy_lim])
-    axs[i].set_ylim([-xy_lim, xy_lim])
+                            s = 1,  c = plt.cm.tab10(y[i])) # removed c = y[i], cmap = plt.cm.tab10
+    # axs[i].set_xlim([-xy_lim, xy_lim])
+    # axs[i].set_ylim([-xy_lim, xy_lim])
     axs[i].legend(*scatter.legend_elements())
     
     wandb.log({"Embdedding": wandb.Image(plt)})
 
 
-def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), category_count = 10, xy_lim = 3):
-  fig, axs = plt.subplots(category_count, len(data_2d), figsize = figsize )
+
+
+def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), category_count = 10):
+  _, axs = plt.subplots(category_count, len(data_2d), figsize = figsize )
   colors = np.array(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])
   for i in range(len(data_2d)):
       for k in range(category_count):
@@ -81,8 +83,8 @@ def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), 
         scatter = axs[k, i].scatter(data_2d_k[:, 0], data_2d_k[:, 1],
                                 s = 1, c = colors[k], cmap = plt.cm.tab10)
         axs[k, i].legend(*scatter.legend_elements())
-        axs[k, i].set_xlim([-xy_lim, xy_lim])
-        axs[k, i].set_ylim([-xy_lim, xy_lim])
+        # axs[k, i].set_xlim([-xy_lim, xy_lim])
+        # axs[k, i].set_ylim([-xy_lim, xy_lim])
         
         wandb.log({"Embdedding_classes": wandb.Image(plt)})
 

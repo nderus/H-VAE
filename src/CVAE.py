@@ -135,3 +135,27 @@ class CVAE(keras.Model):
             'kl_loss': self.kl_loss_tracker.result(),
             "loss_no_weights": self.total_loss_no_weights_tracker.result()
         }
+
+
+# class TwoStageVaeModel(CVAE):
+
+#     def __init__(self, encoder, decoder, beta, shape, category_count, **kwargs):
+#         super(TwoStageVaeModel, self).__init__(encoder2, decoder2, second_depth, second_dim)
+
+#     def extract_posterior(self, sess, x):
+#         #num_sample = np.shape(x)[0] lenght of dataset
+#         #num_iter = math.ceil(float(num_sample) / float(self.batch_size)) 
+#         num_iter = 1000 #fixed for now
+#         x_extend = np.concatenate([x, x[0:self.batch_size]], 0)
+#         mu_z, sd_z = [], []
+#         for i in range(num_iter):
+#             mu_z_batch, sd_z_batch = sess.run([self.mu_z, self.sd_z], feed_dict={self.raw_x: x_extend[i*self.batch_size:(i+1)*self.batch_size], self.is_training: False})
+#             mu_z.append(mu_z_batch)
+#             sd_z.append(sd_z_batch)
+#         mu_z = np.concatenate(mu_z, 0)[0:num_sample]
+#         sd_z = np.concatenate(sd_z, 0)[0:num_sample]
+#         return mu_z, sd_z
+
+
+
+# self.is_training = tf.placeholder(tf.bool, [], 'is_training')

@@ -42,7 +42,6 @@ class VisualizeActivations():
         # This will return a list of 5 Numpy arrays:
         # one array per layer activation
         if 'encoder' in model.name:
-            
             _, input_label, conditional_input = main_model.conditional_input(img_tensor) 
             activations = activation_model.predict(conditional_input) #for encoder
             print('encoder activations:', len(activations))
@@ -59,9 +58,9 @@ class VisualizeActivations():
             return 'Error: model name not found'
             
         
-        for activation, name in zip(activations[0:], layer_names[0:]):
-            print(name)
-            print(activation.shape)
+        # for activation, name in zip(activations[0:], layer_names[0:]):
+        #     print(name)
+        #     print(activation.shape)
 
         
         for _, (activation, name) in enumerate(zip(activations[0:], layer_names[0:])):

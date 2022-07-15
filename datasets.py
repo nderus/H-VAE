@@ -85,6 +85,7 @@ def data_loader(name, root_folder):
             else:
                 class1.append(filename)
 
+        random.seed(11)
         sampled_class0 = random.sample(class0, 50000) # TO DO: use whole dataset
         sampled_class1 = random.sample(class1, 50000)
         class0_array = get_image_arrays(sampled_class0, 0)
@@ -100,8 +101,8 @@ def data_loader(name, root_folder):
         
         X = np.array(X).reshape(-1, 64, 64, 3)
         y = np.array(y)
-        train_x, test_x, train_y, test_y = train_test_split(X, y, test_size = 0.2)
-        train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size = 0.25)
+        train_x, test_x, train_y, test_y = train_test_split(X, y, test_size = 0.2, random_state=11)
+        train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size = 0.25, random_state=11)
         train_y_one_hot = to_categorical(train_y, category_count)
         test_y_one_hot = to_categorical(test_y, category_count)
         val_y_one_hot = to_categorical(val_y, category_count) 

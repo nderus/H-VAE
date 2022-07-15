@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import os
@@ -12,10 +12,10 @@ import wandb
 from wandb.keras import WandbCallback
 
 
-# In[ ]:
+# In[10]:
 
 
-from encoders import EncoderResNet18, EncoderResNet34, encoderCNN
+from encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN
 from decoders import DecoderResNet18, DecoderResNet34, decoderCNN
 from datasets import data_loader
 from embedding import embedding
@@ -27,21 +27,21 @@ from src.CVAE import CVAE
 backend.clear_session()
 
 
-# In[ ]:
+# In[3]:
 
 
 # TO DO: this should be passed as arguments
 dataset_name = 'histo'
-model_name = 'CVAE'
-kl_coefficient = 0.002
-encoded_dim = 768
+model_name = 'CVAE_resnet'
+kl_coefficient = 0.05
+encoded_dim = 640
 learning_rate = 0.0001 
 epoch_count = 100
 batch_size = 100
 patience = 5
 
 
-# In[ ]:
+# In[4]:
 
 
 if dataset_name == 'experimental':
@@ -61,7 +61,7 @@ else:
 
 
 
-# In[ ]:
+# In[5]:
 
 
 wandb.init(project="HistoDL", entity="nrderus",
@@ -77,13 +77,7 @@ wandb.init(project="HistoDL", entity="nrderus",
 })
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
+# In[11]:
 
 
 if 'resnet' in model_name:
@@ -95,7 +89,7 @@ else:
 encoder.summary()
 
 
-# In[ ]:
+# In[8]:
 
 
 if 'resnet' in model_name:
