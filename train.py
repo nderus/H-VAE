@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -12,36 +12,41 @@ import wandb
 from wandb.keras import WandbCallback
 
 
-# In[10]:
+# In[ ]:
 
 
 from encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN
-from decoders import DecoderResNet18, DecoderResNet34, decoderCNN
+from decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
 from datasets import data_loader
-from embedding import embedding
+from embeddings import embedding
 from reconstructions import reconstructions
 from generations import Generations
 from activations import VisualizeActivations
+from gradcam import GradCam
 from src.CVAE import CVAE
+
+# import importlib
+# importlib.reload(embeddings)
+# from embeddings import embedding
 
 backend.clear_session()
 
 
-# In[3]:
+# In[ ]:
 
 
 # TO DO: this should be passed as arguments
 dataset_name = 'histo'
-model_name = 'CVAE_resnet'
-kl_coefficient = 0.05
-encoded_dim = 640
+model_name = 'CVAE'
+kl_coefficient = 0
+encoded_dim = 1024
 learning_rate = 0.0001 
 epoch_count = 100
 batch_size = 100
 patience = 5
 
 
-# In[4]:
+# In[ ]:
 
 
 if dataset_name == 'experimental':
@@ -58,13 +63,13 @@ else:
 # In[ ]:
 
 
+train_x.shape[0] /41
 
 
+# In[ ]:
 
-# In[5]:
 
-
-wandb.init(project="HistoDL", entity="nrderus",
+wandb.init(project="H-VAE", entity="nrderus",
   config = {
   "dataset": dataset_name,
   "model": model_name,
@@ -77,7 +82,7 @@ wandb.init(project="HistoDL", entity="nrderus",
 })
 
 
-# In[11]:
+# In[ ]:
 
 
 if 'resnet' in model_name:
@@ -89,7 +94,7 @@ else:
 encoder.summary()
 
 
-# In[8]:
+# In[ ]:
 
 
 if 'resnet' in model_name:
@@ -150,9 +155,9 @@ history = cvae.fit([train_x, train_y_one_hot],
 # In[ ]:
 
 
-_, input_label_train, train_input = cvae.conditional_input([train_x, train_y_one_hot])
-_, input_label_test, test_input = cvae.conditional_input([test_x, test_y_one_hot])
-_, input_label_val, val_input = cvae.conditional_input([val_x, val_y_one_hot])
+_, input_label_train, train_input = cvae.conditional_input([train_x[:5000], train_y_one_hot[:5000]])
+_, input_label_test, test_input = cvae.conditional_input([test_x[:5000], test_y_one_hot[:5000]])
+_, input_label_val, val_input = cvae.conditional_input([val_x[:5000], val_y_one_hot[:5000]])
 
 train_x_mean, train_log_var = cvae.encoder.predict(train_input)
 test_x_mean, test_log_var = cvae.encoder.predict(test_input)
@@ -162,13 +167,19 @@ val_x_mean, val_log_var = cvae.encoder.predict(val_input)
 # In[ ]:
 
 
-embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, train_log_var, test_log_var, val_log_var, labels, xy_lim = 80, quantity = 5000, avg_latent=True)
+embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, train_log_var, test_log_var, val_log_var, labels, quantity = 5000, avg_latent=True)
 
 
 # In[ ]:
 
 
-reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels)
+reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'train')
+
+
+# In[ ]:
+
+
+reconstructions(cvae, test_x, test_y, test_x_mean, test_log_var, input_label_test, labels, set = 'test')
 
 
 # In[ ]:
@@ -190,5 +201,33 @@ activations_decoder()
 # In[ ]:
 
 
+if 'resnet' in model_name:
+    target_layer = "layer4"
+else:
+    target_layer = "block3_conv2"
+
+
+# In[ ]:
+
+
+gc = GradCam(cvae, test_x, test_y_one_hot, HQ = True, target_layer = target_layer)
+gc.gradcam()
+
+
+# In[ ]:
+
+
+gc.guided_gradcam()
+
+
+# In[ ]:
+
+
 wandb.finish(exit_code=0, quiet = True) 
+
+
+# In[ ]:
+
+
+
 

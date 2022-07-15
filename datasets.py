@@ -65,7 +65,14 @@ def data_loader(name, root_folder):
         train_y = np.array(df.iloc[0: 162770], dtype = "float32") #TO DO: check the splits
         val_y = np.array(df.iloc[162770: 182637], dtype = "float32")
         test_y = np.array(df.iloc[182637: 202599], dtype = "float32")
-        
+        train_x = train_x[:100000,:, :, :] # TO DO: solve batch_size issue
+        train_y = train_y[:100000, :] 
+
+        test_x = test_x[:19000,:, :, :]
+        test_y = test_y[:19000, :]
+
+        val_x = val_x[:19000, :, :, :]
+        val_y = val_y[:19000, :]
         train_y_one_hot = train_y
         val_y_one_hot = val_y
         test_y_one_hot = test_y
