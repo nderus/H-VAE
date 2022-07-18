@@ -44,6 +44,29 @@ class Generations:
             if len(self.labels) <= 10:
                 axs[1, i].set_title(self.labels[digit_label])
             wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
+
+    def generations_celeba(self, target_attr):
+        image_count = 10
+
+        _, axs = plt.subplots(2, image_count, figsize=(12, 3))
+        for j in range(2):
+            for i in range(image_count):
+
+                attr_vect = np.zeros(40)
+                for attr in target_attr:
+                    attr_vect[attr] = 1
+
+                random_sample = tf.random.normal(shape = (1, self.encoded_dim))
+                digit_label_one_hot= np.array([attr_vect], dtype='float32')
+
+
+                decoded_x = self.modeldecoder.predict([random_sample,digit_label_one_hot])
+                digit = decoded_x[0].reshape(self.input_shape)
+                axs[j, i].imshow(digit)
+                axs[j, i].axis('off')
+
+                attributes = str(self.labels[target_attr].tolist())
+        wandb.log({"Generations:_{}".format(attributes): wandb.Image(plt)})
     
     def latent_space_interpolation(self, digit_label=1):
         n = 10 # number of images per row and column
@@ -75,7 +98,10 @@ class Generations:
                 self.generations_class(i)
 
         else:
-            print('generations for celeba not implemented yet')
+            print('generations for celeba beta')
+            self.generations_celeba(self, [0, 8, 15, 20])
+            self.generations_celeba(self, [2, 9, 12, 21, 26, 27, 31, 39])
+
 
 
 def plot_generated_images(generated_images, nrows, ncols, digit_label,
