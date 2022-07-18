@@ -22,7 +22,10 @@ class GradCam:
     def gradcam(self):
 
         last_conv_layer = self.model.get_layer(self.target_layer) #last conv layer
-        last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.output)
+        try: 
+            last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.get_output_at(0))
+        except:
+             last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.output)
 
         classifier_input = tf.keras.Input(shape=last_conv_layer.output.shape[1:])
         x = classifier_input
@@ -53,7 +56,7 @@ class GradCam:
         # Clip the values (equivalent to applying ReLU)
         # and then normalise the values
         gradcam = np.clip(gradcam, 0, np.max(gradcam)) / np.max(gradcam)
-        gradcam = cv2.resize(gradcam, (64, 64))
+        gradcam = cv2.resize(gradcam, self.model.input_shape[1:3])
         wandb.log({"Gradcam": wandb.Image(gradcam) })
         plt.imshow(self.image)
         plt.imshow(gradcam, alpha=0.5)
@@ -62,7 +65,11 @@ class GradCam:
 
         #GUIDED GRAD CAM
         last_conv_layer = self.model.get_layer(self.target_layer) #last conv layer
-        last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.output)
+        try: 
+            last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.get_output_at(0))
+        except:
+             last_conv_layer_model = tf.keras.Model(self.model.inputs, last_conv_layer.output)
+
         classifier_input = tf.keras.Input(shape=last_conv_layer.output.shape[1:])
         x = classifier_input
         names = self.find_names_after(self.target_layer)
@@ -88,15 +95,15 @@ class GradCam:
             guided_gradcam = np.ones(last_conv_layer_output.shape[:2], dtype=np.float32)
             for i, w in enumerate(pooled_guided_grads):
                 guided_gradcam += w * last_conv_layer_output[:, :, i]
-            guided_gradcam = cv2.resize(guided_gradcam.numpy(), (64, 64))
+            guided_gradcam = cv2.resize(guided_gradcam.numpy(), self.model.input_shape[1:3])
             guided_gradcam = np.clip(guided_gradcam, 0, np.max(guided_gradcam))
             guided_gradcam = (guided_gradcam - guided_gradcam.min()) / (
                     guided_gradcam.max() - guided_gradcam.min()
             )
-            
             plt.imshow(self.image)
             plt.imshow(guided_gradcam, alpha=0.5)
-            img_wandb = cv2.addWeighted(np.array(self.image),0.4,np.array(guided_gradcam), 0.5 ,0)
+
+            img_wandb = plt.imshow(guided_gradcam, alpha=0.5)
             wandb.log({"Gradcam_guided": wandb.Image(img_wandb) })
 
             if self.HQ:
@@ -110,6 +117,8 @@ class GradCam:
                 saliency_map = np.clip(saliency_map, 0, 1)
                 saliency_map *= (2 ** 8) - 1
                 saliency_map = saliency_map.astype(np.uint8)
+                saliency_map= cv2.resize(saliency_map, self.model.input_shape[1:3]) #added
+                print(saliency_map.shape)
                 wandb.log({"Gradcam_guided_HQ": wandb.Image(saliency_map) })
                 plt.imshow(saliency_map)
 
@@ -136,9 +145,16 @@ class GuidedBackprop:
         self.gb_model = self.build_guided_model()
 
     def build_guided_model(self):
-        gb_model = tf.keras.Model(
-            self.model.inputs, self.model.get_layer(self.layer_name).output
+        try:
+            gb_model = tf.keras.Model(
+                self.model.inputs, self.model.get_layer(self.layer_name).get_output_at(0)
         )
+        except:
+            gb_model = tf.keras.Model(
+                self.model.inputs, self.model.get_layer(self.layer_name).output
+        )
+
+
         layers = [
             layer for layer in gb_model.layers[1:] if hasattr(layer, "activation")
         ]

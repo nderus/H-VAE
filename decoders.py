@@ -21,19 +21,19 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
 
         input = input + shortcut
-        return layers.ReLU()(input)
+        return layers.LeakyReLU(0.2)(input)
 
 
 class DecoderResNet(keras.Model):
-    def __init__(self, resblock, repeat, encoded_dim):
+    def __init__(self, resblock, repeat, encoded_dim, final_stride=2):
         super().__init__()
         
         self.layer5 = keras.Sequential([
@@ -67,14 +67,14 @@ class DecoderResNet(keras.Model):
                 layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                layers.ReLU()
+                layers.LeakyReLU(0.2)
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
         self.pre_reshape = layers.Dense(4*4*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(4, 4, 512), name = 'reshape')
         #self.upsample = layers.UpSampling2D(2)
-        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=3, strides=2, activation='sigmoid',padding='same', name='outputs')
+        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=3, strides=final_stride, activation='sigmoid',padding='same', name='outputs')
 
 
     def call(self, input):
@@ -120,24 +120,24 @@ class ResBottleneckBlock(keras.Model): #check this
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
         input = self.conv3(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.ReLU()(input)
+        input = layers.LeakyReLU(0.2)(input)
 
         input = input + shortcut
-        return layers.ReLU()(input)
+        return layers.LeakyReLU(0.2)(input)
 
 class DecoderResNet18(DecoderResNet):
-    def __init__(self, encoded_dim):
-        super().__init__(DecoderResBlock, [2, 2, 2, 2], encoded_dim)
+    def __init__(self, encoded_dim, final_stride):
+        super().__init__(DecoderResBlock, [2, 2, 2, 2], encoded_dim, final_stride)
 
     def call(self, input):
         return super().call(input)
@@ -147,8 +147,8 @@ class DecoderResNet18(DecoderResNet):
         return keras.models.Model(x, self.call(x), name='decoder')
 
 class DecoderResNet34(DecoderResNet):
-    def __init__(self, encoded_dim):
-        super().__init__(DecoderResBlock, [3, 4, 6, 3], encoded_dim)
+    def __init__(self, encoded_dim, final_stride):
+        super().__init__(DecoderResBlock, [3, 4, 6, 3], encoded_dim, final_stride)
 
     def call(self, input):
         return super().call(input)
@@ -159,8 +159,8 @@ class DecoderResNet34(DecoderResNet):
 
 
 class DecoderResNet50(DecoderResNet):
-    def __init__(self, encoded_dim):
-        super().__init__(ResBottleneckBlock,  [3, 4, 6, 3], encoded_dim)
+    def __init__(self, encoded_dim, final_stride):
+        super().__init__(ResBottleneckBlock,  [3, 4, 6, 3], encoded_dim, final_stride)
 
     def call(self, input):
         return super().call(input)
@@ -170,7 +170,7 @@ class DecoderResNet50(DecoderResNet):
         return keras.models.Model(x, self.call(x), name='encoder')
 
 
-def decoderCNN(input_shape, label_size=10, encoded_dim = 2): 
+def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2): 
 
     decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
                                  name='decoder_input')
@@ -210,7 +210,7 @@ def decoderCNN(input_shape, label_size=10, encoded_dim = 2):
                     name='up_block6_conv2')(x)
     x = bn_relu(x)                                
     outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=3,
-                             strides=1, activation='sigmoid',padding='same')(x)
+                             strides=final_stride, activation='sigmoid',padding='same')(x)
 
     model = keras.Model(decoder_inputs, outputs, name='decoder')
     return model
