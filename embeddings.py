@@ -16,9 +16,10 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
         plot_2d_data( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
                     [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]],
                     ['Train','Test', 'Validation'], figsize = (12,4))
-        plot_2d_data_categorical( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
-                    [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
-                    ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
+        if category_count <= 10:
+          plot_2d_data_categorical( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
+                      [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
+                      ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     else:
         from sklearn import manifold
@@ -29,9 +30,10 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
         plot_2d_data( [train_x_tsne, test_x_tsne, val_x_tsne],
                 [train_y[:quantity], test_y[:quantity], val_y[:quantity]],
                 ['Train','Test', 'Validation'], (12,4) )
-        plot_2d_data_categorical( [train_x_tsne, test_x_tsne, val_x_tsne],
-                [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
-                ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
+        if category_count <= 10:
+          plot_2d_data_categorical( [train_x_tsne, test_x_tsne, val_x_tsne],
+                  [train_y[:quantity], test_y[:quantity] ,val_y[:quantity]], labels,
+                  ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     if avg_latent:
       import tensorflow as tf

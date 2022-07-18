@@ -22,8 +22,8 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
             fixed_idx = range(0, image_count)
             axs[0, i].imshow(train_x[random_idx])
             axs[0, i].axis('off')
-
-            axs[0, i].set_title( labels[int(train_y[random_idx])]  )
+            if len(labels) <= 10:
+                axs[0, i].set_title( labels[int(train_y[random_idx])]  )
             axs[1, i].imshow(reconstruction_train[random_idx])
             axs[1, i].axis('off')
         wandb.log({"Reconstructions": wandb.Image(plt)})
@@ -34,8 +34,8 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
         for i in range(image_count):
             axs[0, i].imshow(train_x[i])
             axs[0, i].axis('off')
-
-            axs[0, i].set_title( labels[int(train_y[i])]  )
+            if len(labels) <= 10:
+                axs[0, i].set_title( labels[int(train_y[i])]  )
             axs[1, i].imshow(reconstruction_train[i])
             axs[1, i].axis('off')
         wandb.log({"Reconstructions_{}".format(set): wandb.Image(plt)})

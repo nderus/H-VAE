@@ -37,11 +37,12 @@ class Generations:
             digit_1 = decoded_x[1].reshape(self.input_shape) 
             axs[0, i].imshow(digit_0)
             axs[0, i].axis('off')
-    
-            axs[0, i].set_title(self.labels[digit_label])
+            if len(self.labels) <= 10:
+                axs[0, i].set_title(self.labels[digit_label])
             axs[1, i].imshow(digit_1)
             axs[1, i].axis('off')
-            axs[1, i].set_title(self.labels[digit_label])
+            if len(self.labels) <= 10:
+                axs[1, i].set_title(self.labels[digit_label])
             wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
     
     def latent_space_interpolation(self, digit_label=1):
