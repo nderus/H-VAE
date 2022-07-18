@@ -61,7 +61,7 @@ class GradCam:
         plt.imshow(self.image)
         plt.imshow(gradcam, alpha=0.5)
         img_wandb = plt.imshow(gradcam, alpha=0.5)
-        wandb.log({"Gradcam": wandb.Image(gradcam) })
+        wandb.log({"Gradcam": wandb.Image(img_wandb) })
 
     def guided_gradcam(self):
 

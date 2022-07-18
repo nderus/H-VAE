@@ -23,15 +23,15 @@ class EncoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
         #input = layers.Activation('swish')(input)
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
         #input = layers.Activation('swish')(input)
 
         input= input + shortcut
-        return layers.LeakyReLU(0.2)(input)
+        return  layers.Activation('swish')(input)
 
 
 class EncoderResNet(keras.Model):
@@ -43,7 +43,7 @@ class EncoderResNet(keras.Model):
             layers.Conv2D(64, 5, 2, padding='same'),
             layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
             layers.BatchNormalization(),
-            layers.LeakyReLU(0.2)
+             layers.Activation('swish')
         ], name='layer0')
 
         self.layer1 = keras.Sequential([
@@ -119,20 +119,20 @@ class ResBottleneckBlock(keras.Model): #check this
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = self.conv3(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = input + shortcut
-        return layers.LeakyReLU(0.2)(input)
+        return  layers.Activation('swish')(input)
 
 class EncoderResNet18(EncoderResNet):
     def __init__(self, encoded_dim):
@@ -212,7 +212,7 @@ def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
 
 def bn_relu(inputs):
     bn = layers.BatchNormalization()(inputs)
-    relu = layers.LeakyReLU(0.2)(bn)
+    relu =  layers.LeakyReLU(0.2)(bn)
     return(relu)
 
 

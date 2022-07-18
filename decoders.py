@@ -21,15 +21,15 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
 
         input = input + shortcut
-        return layers.LeakyReLU(0.2)(input)
+        return  layers.Activation('swish')(input)
 
 
 class DecoderResNet(keras.Model):
@@ -67,7 +67,7 @@ class DecoderResNet(keras.Model):
                 layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                layers.LeakyReLU(0.2)
+                 layers.Activation('swish')
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
@@ -120,20 +120,20 @@ class ResBottleneckBlock(keras.Model): #check this
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = self.conv3(input)
         input = layers.BatchNormalization()(input)
         #input = layers.Activation('swish')(input)
-        input = layers.LeakyReLU(0.2)(input)
+        input =  layers.Activation('swish')(input)
 
         input = input + shortcut
-        return layers.LeakyReLU(0.2)(input)
+        return  layers.Activation('swish')(input)
 
 class DecoderResNet18(DecoderResNet):
     def __init__(self, encoded_dim, final_stride):
