@@ -38,7 +38,7 @@ backend.clear_session()
 # TO DO: this should be passed as arguments
 dataset_name = 'histo'
 model_name = 'CVAE'
-kl_coefficient = 0
+kl_coefficient = .65
 encoded_dim = 1024
 learning_rate = 0.0001 
 epoch_count = 100
@@ -89,7 +89,7 @@ if 'resnet' in model_name:
     encoder = EncoderResNet18(encoded_dim = encoded_dim)
     encoder = encoder.model(input_shape=(input_shape[0], input_shape[1], input_shape[2] + category_count))
 else:
-    encoder = encoderCNN(input_shape, category_count, encoded_dim)
+    encoder = encoderCNN(input_shape, category_count, encoded_dim )
 
 encoder.summary()
 
@@ -98,10 +98,10 @@ encoder.summary()
 
 
 if 'resnet' in model_name:
-    decoder = DecoderResNet18( encoded_dim = encoded_dim)
+    decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 1)
     decoder = decoder.model(input_shape=(encoded_dim + category_count,))
 else:
-    decoder = decoderCNN(input_shape, category_count, encoded_dim)
+    decoder = decoderCNN(input_shape, category_count, encoded_dim, final_stride = 1)
 
 decoder.summary()
 
@@ -155,9 +155,9 @@ history = cvae.fit([train_x, train_y_one_hot],
 # In[ ]:
 
 
-_, input_label_train, train_input = cvae.conditional_input([train_x[:5000], train_y_one_hot[:5000]])
-_, input_label_test, test_input = cvae.conditional_input([test_x[:5000], test_y_one_hot[:5000]])
-_, input_label_val, val_input = cvae.conditional_input([val_x[:5000], val_y_one_hot[:5000]])
+_, input_label_train, train_input = cvae.conditional_input([train_x[:1000], train_y_one_hot[:1000]])
+_, input_label_test, test_input = cvae.conditional_input([test_x[:1000], test_y_one_hot[:1000]])
+_, input_label_val, val_input = cvae.conditional_input([val_x[:1000], val_y_one_hot[:1000]])
 
 train_x_mean, train_log_var = cvae.encoder.predict(train_input)
 test_x_mean, test_log_var = cvae.encoder.predict(test_input)
@@ -167,7 +167,7 @@ val_x_mean, val_log_var = cvae.encoder.predict(val_input)
 # In[ ]:
 
 
-embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, train_log_var, test_log_var, val_log_var, labels, quantity = 5000, avg_latent=True)
+embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, train_log_var, test_log_var, val_log_var, labels, quantity = 1000, avg_latent=True)
 
 
 # In[ ]:
@@ -224,10 +224,4 @@ gc.guided_gradcam()
 
 
 wandb.finish(exit_code=0, quiet = True) 
-
-
-# In[ ]:
-
-
-
 

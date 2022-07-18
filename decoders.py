@@ -21,15 +21,15 @@ class DecoderResBlock(keras.Model):
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        input =  layers.Activation('swish')(input)
+        input =  layers.LeakyReLU(0.2)(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        input =  layers.Activation('swish')(input)
+        input =  layers.LeakyReLU(0.2)(input)
 
 
         input = input + shortcut
-        return  layers.Activation('swish')(input)
+        return  layers.LeakyReLU(0.2)(input)
 
 
 class DecoderResNet(keras.Model):
@@ -67,7 +67,7 @@ class DecoderResNet(keras.Model):
                 layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
-                 layers.Activation('swish')
+                 layers.LeakyReLU(0.2)
             ], name='layer9')
           
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
@@ -92,23 +92,24 @@ class DecoderResNet(keras.Model):
 
     def get_config(self):
         return super().get_config()
+
 class ResBottleneckBlock(keras.Model): #check this
-    def __init__(self, filters, downsample):
+    def __init__(self, filters, upsample):
         super().__init__()
-        self.downsample = downsample
+        self.upsample = upsample
         self.filters = filters
         self.conv1 = layers.Conv2D(filters, 1, 1)
-        if downsample:
+        if upsample:
             self.conv2 = layers.Conv2D(filters, 3, 2, padding='same')
         else:
             self.conv2 = layers.Conv2D(filters, 3, 1, padding='same')
         self.conv3 = layers.Conv2D(filters*4, 1, 1)
 
     def build(self, input_shape):
-        if self.downsample or self.filters * 4 != input_shape[-1]:
+        if self.upsample or self.filters * 4 != input_shape[-1]:
             self.shortcut = keras.Sequential([
                 layers.Conv2D(
-                    self.filters*4, 1, 2 if self.downsample else 1, padding='same'),
+                    self.filters*4, 1, 2 if self.upsample else 1, padding='same'),
                 layers.BatchNormalization()
             ])
         else:
@@ -119,21 +120,21 @@ class ResBottleneckBlock(keras.Model): #check this
 
         input = self.conv1(input)
         input = layers.BatchNormalization()(input)
-        #input = layers.Activation('swish')(input)
-        input =  layers.Activation('swish')(input)
+        #input = layers.LeakyReLU(0.2)(input)
+        input =  layers.LeakyReLU(0.2)(input)
 
         input = self.conv2(input)
         input = layers.BatchNormalization()(input)
-        #input = layers.Activation('swish')(input)
-        input =  layers.Activation('swish')(input)
+        #input = layers.LeakyReLU(0.2)(input)
+        input =  layers.LeakyReLU(0.2)(input)
 
         input = self.conv3(input)
         input = layers.BatchNormalization()(input)
-        #input = layers.Activation('swish')(input)
-        input =  layers.Activation('swish')(input)
+        #input = layers.LeakyReLU(0.2)(input)
+        input =  layers.LeakyReLU(0.2)(input)
 
         input = input + shortcut
-        return  layers.Activation('swish')(input)
+        return  layers.LeakyReLU(0.2)(input)
 
 class DecoderResNet18(DecoderResNet):
     def __init__(self, encoded_dim, final_stride):
