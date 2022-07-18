@@ -93,9 +93,11 @@ class GradCam:
             guided_gradcam = (guided_gradcam - guided_gradcam.min()) / (
                     guided_gradcam.max() - guided_gradcam.min()
             )
-            wandb.log({"Gradcam_guided": wandb.Image(guided_gradcam) })
+            
             plt.imshow(self.image)
             plt.imshow(guided_gradcam, alpha=0.5)
+            img_wandb = cv2.addWeighted(np.array(self.image),0.4,np.array(guided_gradcam), 0.5 ,0)
+            wandb.log({"Gradcam_guided": wandb.Image(img_wandb) })
 
             if self.HQ:
                 gb = GuidedBackprop(self.cvae, self.test_y_one_hot, self.model, self.target_layer)

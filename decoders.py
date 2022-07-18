@@ -73,7 +73,7 @@ class DecoderResNet(keras.Model):
         self.bottleneck = layers.Dense(encoded_dim * 2, name='bottleneck')
         self.pre_reshape = layers.Dense(4*4*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(4, 4, 512), name = 'reshape')
-        self.upsample = layers.UpSampling2D(2)
+        #self.upsample = layers.UpSampling2D(2)
         self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=3, strides=2, activation='sigmoid',padding='same', name='outputs')
 
 
