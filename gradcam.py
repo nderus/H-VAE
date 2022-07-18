@@ -57,9 +57,11 @@ class GradCam:
         # and then normalise the values
         gradcam = np.clip(gradcam, 0, np.max(gradcam)) / np.max(gradcam)
         gradcam = cv2.resize(gradcam, self.model.input_shape[1:3])
-        wandb.log({"Gradcam": wandb.Image(gradcam) })
+        
         plt.imshow(self.image)
         plt.imshow(gradcam, alpha=0.5)
+        img_wandb = plt.imshow(gradcam, alpha=0.5)
+        wandb.log({"Gradcam": wandb.Image(gradcam) })
 
     def guided_gradcam(self):
 

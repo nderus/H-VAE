@@ -38,9 +38,9 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
                 axs[0, i].set_title( labels[int(train_y[i])]  )
             axs[1, i].imshow(reconstruction_train[i])
             axs[1, i].axis('off')
-        wandb.log({"Reconstructions_{}".format(set): wandb.Image(plt)})
 
-    wandb.log({"Reconstructions_{}".format(set): wandb.Image(plt)})
+    #wandb.log({"Reconstructions_{}".format(set): wandb.Image(plt)})
+    wandb.log({"Reconstructions": wandb.Image(plt, caption="Set:{}".format(set)) }) #
 
 
 ####

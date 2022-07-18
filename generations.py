@@ -43,7 +43,8 @@ class Generations:
             axs[1, i].axis('off')
             if len(self.labels) <= 10:
                 axs[1, i].set_title(self.labels[digit_label])
-            wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
+            #wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
+        wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
 
     def generations_celeba(self, target_attr):
         image_count = 10
@@ -66,7 +67,9 @@ class Generations:
                 axs[j, i].axis('off')
 
                 attributes = str(self.labels[target_attr].tolist())
-        wandb.log({"Generations:_{}".format(attributes): wandb.Image(plt)})
+        #wandb.log({"Generations:_{}".format(attributes): wandb.Image(plt)})
+        wandb.log({"Generations": wandb.Image(plt, caption="Attributes:{}".format( attributes)) }) #
+
     
     def latent_space_interpolation(self, digit_label=1):
         n = 10 # number of images per row and column
@@ -116,6 +119,7 @@ def plot_generated_images(generated_images, nrows, ncols, digit_label,
   if no_space_between_plots:
     plt.subplots_adjust(wspace=0,hspace=0)
   
-  wandb.log({"Latent_interpolation_class: {}".format(digit_label): wandb.Image(plt)})
+  #wandb.log({"Latent_interpolation_class: {}".format(digit_label): wandb.Image(plt)})
+  wandb.log({"Latent_interpolation": wandb.Image(plt, caption="Class:{}".format( digit_label)) }) #
 
   plt.show()

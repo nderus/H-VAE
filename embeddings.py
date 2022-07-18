@@ -66,7 +66,7 @@ def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7)):
     # axs[i].set_ylim([-xy_lim, xy_lim])
     axs[i].legend(*scatter.legend_elements())
     
-    wandb.log({"Embdedding": wandb.Image(plt)})
+  wandb.log({"Embdedding": wandb.Image(plt)})
 
 
 
@@ -90,7 +90,7 @@ def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), 
         # axs[k, i].set_xlim([-xy_lim, xy_lim])
         # axs[k, i].set_ylim([-xy_lim, xy_lim])
         
-        wandb.log({"Embdedding_classes": wandb.Image(plt)})
+  wandb.log({"Embdedding_classes": wandb.Image(plt)})
 
 def plot_latent_variables(latent_variance, latent_mean, titles = ['Train','Test', 'Validation'], figsize = (12,8)):
   _, axs = plt.subplots(2, len(latent_variance), figsize = (12,8))
@@ -101,7 +101,7 @@ def plot_latent_variables(latent_variance, latent_mean, titles = ['Train','Test'
       axs[0, i].hist(latent_mean[i], bins=25)
       axs[1, i].hist(latent_variance[i], bins=25)
       
-      wandb.log({"Latent_variables": wandb.Image(plt)})
+  wandb.log({"Latent_variables": wandb.Image(plt)})
 
 def find_indices(lst, condition):
     return np.array([i for i, elem in enumerate(lst) if condition(elem)])
