@@ -44,7 +44,7 @@ class CVAE(keras.Model):
         z_cond = self.sampling(z_mean, z_log_var, input_label)
         return self.decoder(z_cond)
 
-  
+
     def conditional_input(self, inputs):
         image_size = [self.shape[0], self.shape[1], self.shape[2]]
         input_img = layers.InputLayer(input_shape=image_size,
@@ -69,7 +69,7 @@ class CVAE(keras.Model):
         z_cond = tf.concat([z, input_label], axis=1)
         return z_cond
 
-
+    @tf.function
     def train_step(self, data):
         if isinstance(data, tuple):
             data = data[0]
@@ -105,7 +105,7 @@ class CVAE(keras.Model):
 
         }
 
-
+    @tf.function
     def test_step(self, data):
         if isinstance(data, tuple):
             data = data[0]
