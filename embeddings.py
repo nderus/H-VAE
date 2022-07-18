@@ -58,8 +58,13 @@ def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7)):
     if (titles != None):
       axs[i].set_title(titles[i])
     
-    scatter=axs[i].scatter(data_2d[i][:, 0], data_2d[i][:, 1],
-                            s = 1,  c = plt.cm.tab10(y[i])) # removed c = y[i], cmap = plt.cm.tab10
+    if category_count <= 10:
+      scatter=axs[i].scatter(data_2d[i][:, 0], data_2d[i][:, 1],
+                              s = 1,  c = plt.cm.tab10(y[i])) # removed c = y[i], cmap = plt.cm.tab10
+    else:
+            scatter=axs[i].scatter(data_2d[i][:, 0], data_2d[i][:, 1],
+                              s = 1) 
+
     # axs[i].set_xlim([-xy_lim, xy_lim])
     # axs[i].set_ylim([-xy_lim, xy_lim])
     axs[i].legend(*scatter.legend_elements())
