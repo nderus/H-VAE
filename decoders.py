@@ -98,17 +98,17 @@ class ResBottleneckBlock(keras.Model): #check this
         super().__init__()
         self.upsample = upsample
         self.filters = filters
-        self.conv1 = layers.Conv2D(filters, 1, 1)
+        self.conv1 = layers.Conv2DTranspose(filters, 1, 1)
         if upsample:
-            self.conv2 = layers.Conv2D(filters, 3, 2, padding='same')
+            self.conv2 = layers.Conv2DTranspose(filters, 3, 2, padding='same')
         else:
-            self.conv2 = layers.Conv2D(filters, 3, 1, padding='same')
-        self.conv3 = layers.Conv2D(filters*4, 1, 1)
+            self.conv2 = layers.Conv2DTranspose(filters, 3, 1, padding='same')
+        self.conv3 = layers.Conv2DTranspose(filters*4, 1, 1)
 
     def build(self, input_shape):
         if self.upsample or self.filters * 4 != input_shape[-1]:
             self.shortcut = keras.Sequential([
-                layers.Conv2D(
+                layers.Conv2DTranspose(
                     self.filters*4, 1, 2 if self.upsample else 1, padding='same'),
                 layers.BatchNormalization()
             ])
