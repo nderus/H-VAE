@@ -43,7 +43,7 @@ class EncoderResNet(keras.Model):
             layers.Conv2D(64, 5, 2, padding='same'),
             layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
             layers.BatchNormalization(),
-             layers.LeakyReLU(0.2)
+            layers.LeakyReLU(0.2)
         ], name='layer0')
 
         self.layer1 = keras.Sequential([
@@ -96,15 +96,15 @@ class ResBottleneckBlock(keras.Model): #check this
         super().__init__()
         self.downsample = downsample
         self.filters = filters
-        self.conv1 = layers.Conv2D(filters, 1, 1)
+        self.conv1 = layers.Conv2D(filters, 1, 1, padding = 'same')
         if downsample:
             self.conv2 = layers.Conv2D(filters, 3, 2, padding='same')
         else:
             self.conv2 = layers.Conv2D(filters, 3, 1, padding='same')
-        self.conv3 = layers.Conv2D(filters*4, 1, 1)
+        self.conv3 = layers.Conv2D(filters*4, 1, 1, padding = 'same')
 
     def build(self, input_shape):
-        if self.downsample or self.filters * 4 != input_shape[-1]:
+        if (self.downsample) or (self.filters * 4 != input_shape[-1]):
             self.shortcut = keras.Sequential([
                 layers.Conv2D(
                     self.filters*4, 1, 2 if self.downsample else 1, padding='same'),
@@ -113,7 +113,7 @@ class ResBottleneckBlock(keras.Model): #check this
         else:
             self.shortcut = keras.Sequential()
 
-    def __call__(self, input):
+    def call(self, input):
         shortcut = self.shortcut(input)
 
         input = self.conv1(input)

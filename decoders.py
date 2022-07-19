@@ -115,7 +115,7 @@ class ResBottleneckBlock(keras.Model): #check this
         else:
             self.shortcut = keras.Sequential()
 
-    def __call__(self, input):
+    def call(self, input):
         shortcut = self.shortcut(input)
 
         input = self.conv1(input)
