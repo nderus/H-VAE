@@ -59,8 +59,8 @@ class GradCam:
         gradcam = cv2.resize(gradcam, self.model.input_shape[1:3])
         
         plt.imshow(self.image)
-        plt.imshow(gradcam, alpha=0.5)
-        img_wandb = plt.imshow(gradcam, alpha=0.5)
+        plt.imshow(gradcam, alpha=0.3)
+        img_wandb = plt.imshow(gradcam, alpha=0.3)
         wandb.log({"Gradcam": wandb.Image(img_wandb) })
 
     def guided_gradcam(self):
@@ -103,9 +103,9 @@ class GradCam:
                     guided_gradcam.max() - guided_gradcam.min()
             )
             plt.imshow(self.image)
-            plt.imshow(guided_gradcam, alpha=0.5)
+            plt.imshow(guided_gradcam, alpha=0.3)
 
-            img_wandb = plt.imshow(guided_gradcam, alpha=0.5)
+            img_wandb = plt.imshow(guided_gradcam, alpha=0.3)
             wandb.log({"Gradcam_guided": wandb.Image(img_wandb) })
 
             if self.HQ:

@@ -200,7 +200,7 @@ def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
                 name='block3_conv2')(x)    
     x = bn_relu(x)            
     x = layers.Flatten()(x)
-    y = layers.Dense(encoded_dim * 2 )(x)
+    y = layers.Dense(encoded_dim )(x) #removed 2*
     mu = layers.Dense(encoded_dim, name='mu')(y)
     log_var = layers.Dense(encoded_dim, name='log_var')(y)
     
