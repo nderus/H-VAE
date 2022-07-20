@@ -168,7 +168,7 @@ class DecoderResNet50(DecoderResNet):
 
     def model(self, input_shape):
         x = layers.Input(input_shape, name='input', dtype='float32')
-        return keras.models.Model(x, self.call(x), name='encoder')
+        return keras.models.Model(x, self.call(x), name='decoder')
 
 
 def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2): 

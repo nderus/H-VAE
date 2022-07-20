@@ -130,3 +130,5 @@ dmypy.json
 
 # wandb logs
 wandb/
+cvae_encoder/
+cvae_decoder/
