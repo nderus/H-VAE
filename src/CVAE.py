@@ -54,6 +54,7 @@ class CVAE(keras.Model):
         labels = tf.reshape(inputs[1], [-1, 1, 1, self.category_count])
         labels = tf.cast(labels, dtype='float32')
         ones = tf.ones([inputs[0].shape[0]] + image_size[0:-1] + [self.category_count])
+       # ones = tf.ones([100] + image_size[0:-1] + [self.category_count])
         labels = ones * labels
 
         conditional_input = layers.Concatenate(axis=3)([input_img, labels]) 

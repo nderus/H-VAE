@@ -9,7 +9,7 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
 
     z_cond_train = model.sampling(train_x_mean, train_log_var, input_label_train)
 
-    reconstruction_train = model.decoder(z_cond_train[:200])
+    reconstruction_train = model.decoder(z_cond_train[:20])
 
 
     image_count = 10

@@ -74,7 +74,7 @@ class DecoderResNet(keras.Model):
         self.pre_reshape = layers.Dense(4*4*512, name='pre_reshape')
         self.reshape = layers.Reshape(target_shape=(4, 4, 512), name = 'reshape')
         #self.upsample = layers.UpSampling2D(2)
-        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=3, strides=final_stride, activation='sigmoid',padding='same', name='outputs')
+        self.output_layer = layers.Conv2DTranspose(filters = 3, kernel_size=2, strides=final_stride, activation='sigmoid',padding='same', name='outputs')
 
 
     def call(self, input):
