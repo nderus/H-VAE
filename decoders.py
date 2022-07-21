@@ -64,7 +64,7 @@ class DecoderResNet(keras.Model):
         ], name='layer8')
 
         self.layer9 = keras.Sequential([
-                layers.Conv2DTranspose(64, 5, 1, padding='same', use_bias = False), 
+                layers.Conv2DTranspose(64, 3, 1, padding='same', use_bias = False), 
                 #layers.MaxPool2D(pool_size=3, strides=2, padding='same'),
                 layers.BatchNormalization(),
                  layers.LeakyReLU(0.2)

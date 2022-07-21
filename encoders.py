@@ -40,7 +40,7 @@ class EncoderResNet(keras.Model):
         super().__init__()
         
         self.layer0 = keras.Sequential([
-            layers.Conv2D(64, 5, 2, padding='same'),
+            layers.Conv2D(64, 3, 2, padding='same'),
             layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
             layers.BatchNormalization(),
             layers.LeakyReLU(0.2)
