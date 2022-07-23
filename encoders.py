@@ -1,5 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
 
 
 class EncoderResBlock(keras.Model):
@@ -167,7 +168,7 @@ class EncoderResNet50(EncoderResNet):
         x = layers.Input(input_shape, name='input', dtype='float32')
         return keras.models.Model(x, self.call(x), name='encoder')
 
-def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2): 
+def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, regularizer = None):   
 
     inputs = layers.Input(shape=(input_shape[0],
                 input_shape[1], input_shape[2] + label_size), dtype='float32',
@@ -175,18 +176,18 @@ def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
 
     x = layers.Conv2D(16, (3, 3),
                       padding='same',
-                      name='block1_conv1')(inputs)
+                      name='block1_conv1', kernel_regularizer=regularizer)(inputs)
     x = layers.Conv2D(16, (3, 3),
                       padding='same',
-                      name='block1_conv2')(x)
+                      name='block1_conv2', kernel_regularizer=regularizer)(x)
     x = bn_relu(x)
     # block 2
     x = layers.Conv2D(32, (3, 3),
                       padding='same',
-                      name='block2_conv1')(x)
+                      name='block2_conv1', kernel_regularizer=regularizer)(x)
     x = layers.Conv2D(32, (3, 3),
                       padding='same',
-                      name='block2_conv2')(x)
+                      name='block2_conv2', kernel_regularizer=regularizer)(x)
 
     x = bn_relu(x)
     x = layers.MaxPool2D(pool_size=2, strides=2,name='S4')(x)
@@ -194,10 +195,10 @@ def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
     # block 3
     x = layers.Conv2D(64, (3, 3),
                       padding='same',
-                      name='block3_conv1')(x)
+                      name='block3_conv1', kernel_regularizer=regularizer)(x)
     x = layers.Conv2D(64, (3, 3),
                 padding='same',
-                name='block3_conv2')(x)    
+                name='block3_conv2', kernel_regularizer=regularizer)(x)    
     x = bn_relu(x)            
     x = layers.Flatten()(x)
     y = layers.Dense(encoded_dim )(x) #removed 2*

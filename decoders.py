@@ -1,5 +1,7 @@
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
+
 #NB: original had relu and upsample(4)
 class DecoderResBlock(keras.Model):
     def __init__(self, filters, upsample):
@@ -171,7 +173,7 @@ class DecoderResNet50(DecoderResNet):
         return keras.models.Model(x, self.call(x), name='decoder')
 
 
-def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2): 
+def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
 
     decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
                                  name='decoder_input')
@@ -186,29 +188,29 @@ def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2):
     x = bn_relu(x) 
     x = layers.Conv2DTranspose(64, (3, 3),
                       padding='same',
-                      name='up_block4_conv1')(x)
+                      name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(64, (3, 3),
                     padding='same',
-                    name='up_block4_conv2')(x)  
+                    name='up_block4_conv2',  kernel_regularizer=regularizer)(x)  
     x = bn_relu(x) 
     # block 2
     x = layers.Conv2DTranspose(32, (3, 3),
                       padding='same',
-                      name='up_block5_conv1')(x)
+                      name='up_block5_conv1',  kernel_regularizer=regularizer)(x)
     x = layers.Conv2DTranspose(32, (3, 3),
                       padding='same',
-                      name='up_block5_conv2')(x)
+                      name='up_block5_conv2',  kernel_regularizer=regularizer)(x)
     x = bn_relu(x) 
     x = layers.UpSampling2D()(x)
     
     # block 3
     x = layers.Conv2DTranspose(16, (3, 3),
                       padding='same',
-                      name='up_block6_conv1')(x)
+                      name='up_block6_conv1',  kernel_regularizer=regularizer)(x)
 
     x = layers.Conv2DTranspose(16, (3, 3),
                     padding='same',
-                    name='up_block6_conv2')(x)
+                    name='up_block6_conv2',  kernel_regularizer=regularizer)(x)
     x = bn_relu(x)                                
     outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=3,
                              strides=final_stride, activation='sigmoid',padding='same')(x)

@@ -36,9 +36,9 @@ backend.clear_session()
 
 
 # TO DO: this should be passed as arguments
-dataset_name = 'histo'
+dataset_name = 'celeba'
 model_name = 'CVAE'
-kl_coefficient = .65
+kl_coefficient = .03
 encoded_dim = 1024
 learning_rate = 0.0001 
 epoch_count = 100
@@ -63,7 +63,7 @@ else:
 # In[ ]:
 
 
-train_x.shape[0] /41
+get_ipython().run_line_magic('env', '"WANDB_NOTEBOOK_NAME" "train.ipynb"')
 
 
 # In[ ]:
@@ -97,8 +97,14 @@ encoder.summary()
 # In[ ]:
 
 
+
+
+
+# In[ ]:
+
+
 if 'resnet' in model_name:
-    decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 1)
+    decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 2)
     decoder = decoder.model(input_shape=(encoded_dim + category_count,))
 else:
     decoder = decoderCNN(input_shape, category_count, encoded_dim, final_stride = 1)
@@ -124,6 +130,12 @@ try:
         mu = cvae.encoder.get_layer('mu').output
         log_var = cvae.encoder.get_layer('log_var').output
 
+        def scheduler(epoch, lr):
+            if epoch < 30:
+                return lr
+            else:
+                return lr * tf.math.exp(-0.1)
+            
         opt = keras.optimizers.Adam(learning_rate = learning_rate)
         cvae.compile(optimizer = opt, run_eagerly=False)
 except:
@@ -134,9 +146,19 @@ except:
     mu = cvae.encoder.get_layer('mu').output
     log_var = cvae.encoder.get_layer('log_var').output
 
-
+    def scheduler(epoch, lr):
+        if epoch < 30:
+            return lr
+        else:
+            return lr * tf.math.exp(-0.1)
     opt = keras.optimizers.Adam(learning_rate = learning_rate)
     cvae.compile(optimizer = opt, run_eagerly=False)
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
@@ -145,11 +167,23 @@ except:
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss',
              patience=patience, restore_best_weights=False)
 
+
+# lr_decay = tf.keras.callbacks.LearningRateScheduler(
+#     lambda epoch: learning_rate * learning_rate_exp_decay**epoch,
+#     verbose=True)
+
 history = cvae.fit([train_x, train_y_one_hot],
                    validation_data = ([val_x, val_y_one_hot],None),
                    epochs = epoch_count,
                    batch_size = batch_size,
                    callbacks=[early_stop, WandbCallback(save_model = False) ]) #save_weights_only -> ValueError: Unable to create dataset (name already exists)
+
+
+# In[ ]:
+
+
+tf.saved_model.save(cvae.encoder, 'cvae_encoder')
+tf.saved_model.save(cvae.decoder, 'cvae_decoder')
 
 
 # In[ ]:
