@@ -162,6 +162,7 @@ def resize(data):
     data = data / 255.0
     return(data)
 
+
 def normalize_img(image, label):
     import tensorflow as tf
     return tf.cast(image, tf.float32) / 255., label
