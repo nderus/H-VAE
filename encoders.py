@@ -221,3 +221,72 @@ def bn_swish(inputs):
     bn = layers.BatchNormalization()(inputs)
     swish = layers.Activation('swish')(inputs)
     return(swish)
+
+#############
+# To DO. maxpool is in different place
+class EncoderMixNet(keras.Model):
+    def __init__(self, resblock, repeat, encoded_dim):
+   
+        super().__init__()
+        
+        self.layer0 = keras.Sequential([
+            layers.Conv2D(16, 3,  padding='same'),
+            layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
+            layers.BatchNormalization(),
+            layers.LeakyReLU(0.2)
+        ], name='layer0')
+
+        self.layer1 = keras.Sequential([
+            layers.Conv2D(16, 3,  padding='same'),
+            layers.BatchNormalization(),
+            layers.LeakyReLU(0.2)
+        ], name='layer1')
+ 
+        self.layer2 = keras.Sequential([
+            layers.Conv2D(32, 3, padding='same'),
+            layers.BatchNormalization(),
+            layers.LeakyReLU(0.2)
+        ], name='layer2')
+
+        self.layer3 = keras.Sequential([
+            layers.Conv2D(32, 3,  padding='same'),
+            layers.BatchNormalization(),
+            layers.LeakyReLU(0.2)
+        ], name='layer3')
+
+        self.layer4 = keras.Sequential([
+            resblock(64, downsample=True) for _ in range(repeat[0])
+        ], name='layer4')
+
+        self.flat = layers.Flatten(name = 'flatten')
+        self.bottleneck = layers.Dense(encoded_dim * 2, name='encoder_bottleneck')
+        self.mu = layers.Dense(encoded_dim, name='mu')
+        self.log_var = layers.Dense(encoded_dim, name='log_var')
+ 
+
+    def call(self, input):
+        input = self.layer0(input)
+        input = self.layer1(input)
+        input = self.layer2(input)
+        input = self.layer3(input)
+        input = self.layer4(input)
+        input = self.flat(input)
+        input = self.bottleneck(input)
+        mu = self.mu(input)
+        log_var = self.log_var(input)
+
+        return [mu, log_var]
+
+    def get_config(self):
+        return super().get_config()
+
+class EncoderMixNet18(EncoderMixNet):
+    def __init__(self, encoded_dim):
+        super().__init__(EncoderResBlock, [1, 2, 2, 2], encoded_dim)
+
+    def call(self, input):
+        return super().call(input)
+
+    def model(self, input_shape):
+        x = layers.Input(input_shape, name='input', dtype='float32')
+        return keras.models.Model(x, self.call(x), name='encoder')
