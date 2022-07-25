@@ -12,7 +12,7 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
     reconstruction_train = model.decoder(z_cond_train[:20])
 
     if reconstruction_train.shape[3] == 1:
-        reconstruction_train = reconstruction_train.squeeze()
+        reconstruction_train = np.squeeze(np.array(reconstruction_train), axis=3)
 
     image_count = 10
 
