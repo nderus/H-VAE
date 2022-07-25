@@ -19,7 +19,10 @@ def data_loader(name, root_folder):
         category_count = 10
         (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
-                        test_size = 10000, shuffle=True)
+                        test_size = 10000, shuffle=True, random_state=11)
+        train_x=np.expand_dims(train_x,axis=3)
+        val_x=np.expand_dims(val_x,axis=3)
+        test_x=np.expand_dims(test_x,axis=3)
         train_y_one_hot = to_categorical(train_y,category_count)
         val_y_one_hot = to_categorical(val_y,category_count)
         test_y_one_hot=to_categorical(test_y,category_count)
@@ -30,7 +33,10 @@ def data_loader(name, root_folder):
         category_count = 10
         (train_x, train_y), (test_x, test_y) = keras.datasets.fashion_mnist.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
-                test_size = 10000, shuffle=True)
+                test_size = 10000, shuffle=True, random_state=11)
+        train_x=np.expand_dims(train_x,axis=3)
+        val_x=np.expand_dims(val_x,axis=3)
+        test_x=np.expand_dims(test_x,axis=3)
         train_y_one_hot = to_categorical(train_y,category_count)
         val_y_one_hot = to_categorical(val_y,category_count)
         test_y_one_hot = to_categorical(test_y,category_count)
@@ -42,7 +48,7 @@ def data_loader(name, root_folder):
         category_count = 10
         (train_x, train_y), (test_x, test_y) = keras.datasets.cifar10.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
-                test_size = 10000, shuffle=True)
+                test_size = 10000, shuffle=True, random_state=11)
         train_y_one_hot = to_categorical(train_y,category_count)
         val_y_one_hot = to_categorical(val_y,category_count)
         test_y_one_hot = to_categorical(test_y,category_count)
