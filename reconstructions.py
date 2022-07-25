@@ -2,7 +2,7 @@
 import random
 import matplotlib.pyplot as plt
 import wandb
-
+import numpy as np
 
 def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, random_reconstructions=False, set ='train'):
 
@@ -11,6 +11,8 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
 
     reconstruction_train = model.decoder(z_cond_train[:20])
 
+    if reconstruction_train.shape[2] == 1:
+        reconstruction_train = np.squeeze(reconstruction_train, axis=2)
 
     image_count = 10
 
