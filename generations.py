@@ -102,8 +102,8 @@ class Generations:
 
         else:
             print('generations for celeba beta')
-            self.generations_celeba(self, [0, 8, 15, 20])
-            self.generations_celeba(self, [2, 9, 12, 21, 26, 27, 31, 39])
+            self.generations_celeba( [0, 8, 15, 20])
+            self.generations_celeba([2, 9, 12, 21, 26, 27, 31, 39])
 
 
 
