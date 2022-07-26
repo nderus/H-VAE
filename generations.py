@@ -46,27 +46,31 @@ class Generations:
             #wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
         wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
 
-    def generations_celeba(self, target_attr):
+    def generations_celeba(self, target_attr, batch_size = 100):
         image_count = 10
 
         _, axs = plt.subplots(2, image_count, figsize=(12, 3))
-        for j in range(2):
-            for i in range(image_count):
+        #for j in range(2):
+        for i in range(image_count):
 
-                attr_vect = np.zeros(40)
-                for attr in target_attr:
-                    attr_vect[attr] = 1
+            attr_vect = np.zeros(40)
+            for attr in target_attr:
+                attr_vect[attr] = 1
 
-                random_sample = tf.random.normal(shape = (1, self.encoded_dim))
-                digit_label_one_hot= np.array([attr_vect], dtype='float32')
+            labels = np.tile(attr_vect, reps = [batch_size, 1])
+            
+            a = tf.convert_to_tensor(labels,dtype="float")
+            b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
+            z_cond = self.reparametrization(z_mean=0, z_log_var=0.3, input_label = b)
+            decoded_x = self.model.decoder.predict(z_cond)
+            digit_0 = decoded_x[0].reshape(self.input_shape) 
+            digit_1 = decoded_x[1].reshape(self.input_shape) 
+            axs[0, i].imshow(digit_0)
+            axs[0, i].axis('off')
+            axs[1, i].imshow(digit_1)
+            axs[1, i].axis('off')
 
-
-                decoded_x = self.modeldecoder.predict([random_sample,digit_label_one_hot])
-                digit = decoded_x[0].reshape(self.input_shape)
-                axs[j, i].imshow(digit)
-                axs[j, i].axis('off')
-
-                attributes = str(self.labels[target_attr].tolist())
+        attributes = str(self.labels[target_attr].tolist())
         #wandb.log({"Generations:_{}".format(attributes): wandb.Image(plt)})
         wandb.log({"Generations": wandb.Image(plt, caption="Attributes:{}".format( attributes)) }) #
 
