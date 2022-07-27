@@ -49,7 +49,7 @@ class Generations:
     def generations_celeba(self, target_attr, batch_size = 100):
         image_count = 10
 
-        _, axs = plt.subplots(2, image_count, figsize=(12, 3))
+        _, axs = plt.subplots(2, image_count, figsize=(20, 4))
         #for j in range(2):
         for i in range(image_count):
 
@@ -106,7 +106,7 @@ class Generations:
 
         else:
             print('generations for celeba beta')
-            self.generations_celeba( [0, 8, 15, 20])
+            self.generations_celeba( [0, 8, 20])
             self.generations_celeba([2, 9, 12, 21, 26, 27, 31, 39])
 
 
