@@ -193,6 +193,7 @@ class TwoStageVaeModel(object):
         
             self.mu_u = tf.layers.dense(t, self.latent_dim, name='mu_u')
             self.logsd_u = tf.layers.dense(t, self.latent_dim, name='logsd_u')
+            
             self.sd_u = tf.exp(self.logsd_u)
             self.u = self.mu_u + self.sd_u * tf.random_normal([self.batch_size, self.latent_dim])
         
