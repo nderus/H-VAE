@@ -168,7 +168,7 @@ class EncoderResNet50(EncoderResNet):
         x = layers.Input(input_shape, name='input', dtype='float32')
         return keras.models.Model(x, self.call(x), name='encoder')
 
-def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, regularizer = None):   
+def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, regularizer = regularizers.L2(.001)):   
 
     inputs = layers.Input(shape=(input_shape[0],
                 input_shape[1], input_shape[2] + label_size), dtype='float32',
@@ -225,31 +225,31 @@ def bn_swish(inputs):
 #############
 # To DO. maxpool is in different place
 class EncoderMixNet(keras.Model):
-    def __init__(self, resblock, repeat, encoded_dim):
+    def __init__(self, resblock, repeat, encoded_dim, regularizer = regularizers.L2(.001)):
    
         super().__init__()
         
         self.layer0 = keras.Sequential([
-            layers.Conv2D(16, 3,  padding='same'),
+            layers.Conv2D(16, 3,  padding='same',  kernel_regularizer=regularizer),
             layers.MaxPool2D(pool_size=3, strides=1, padding='same'),
             layers.BatchNormalization(),
             layers.LeakyReLU(0.2)
         ], name='layer0')
 
         self.layer1 = keras.Sequential([
-            layers.Conv2D(16, 3,  padding='same'),
+            layers.Conv2D(16, 3,  padding='same',  kernel_regularizer=regularizer),
             layers.BatchNormalization(),
             layers.LeakyReLU(0.2)
         ], name='layer1')
  
         self.layer2 = keras.Sequential([
-            layers.Conv2D(32, 3, padding='same'),
+            layers.Conv2D(32, 3, padding='same',  kernel_regularizer=regularizer),
             layers.BatchNormalization(),
             layers.LeakyReLU(0.2)
         ], name='layer2')
 
         self.layer3 = keras.Sequential([
-            layers.Conv2D(32, 3,  padding='same'),
+            layers.Conv2D(32, 3,  padding='same',  kernel_regularizer=regularizer),
             layers.BatchNormalization(),
             layers.LeakyReLU(0.2)
         ], name='layer3')
@@ -282,7 +282,7 @@ class EncoderMixNet(keras.Model):
 
 class EncoderMixNet18(EncoderMixNet):
     def __init__(self, encoded_dim):
-        super().__init__(EncoderResBlock, [1, 2, 2, 2], encoded_dim)
+        super().__init__(EncoderResBlock, [1, 2, 2, 2], encoded_dim, regularizer = None)
 
     def call(self, input):
         return super().call(input)
