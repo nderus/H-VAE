@@ -11,6 +11,8 @@ class CVAE(keras.Model):
         self.beta = beta
         self.shape = shape
         self.category_count = category_count
+        self.gamma_x = tf.Variable(1.)
+        self.loggamma_x = tf.Variable(1.)
         self.total_loss_tracker = keras.metrics.Mean(name="loss")
         self.reconstruction_loss_tracker = keras.metrics.Mean(
             name="reconstruction_loss"
@@ -43,7 +45,6 @@ class CVAE(keras.Model):
         z_mean, z_log_var = self.encoder(conditional_input)
         z_cond = self.sampling(z_mean, z_log_var, input_label)
         return self.decoder(z_cond)
-
 
     def conditional_input(self, inputs):
         image_size = [self.shape[0], self.shape[1], self.shape[2]]
@@ -90,14 +91,23 @@ class CVAE(keras.Model):
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
             kl_loss = self.beta * kl_loss
+            HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
+            reconstruction_loss = reconstruction_loss / self.gamma_x + self.loggamma_x + HALF_LOG_TWO_PI #added
+            if self.reconstruction_loss_tracker.result() > 0:
+                reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
             total_loss = reconstruction_loss + kl_loss
-            total_loss = tf.reduce_mean(total_loss) 
+            total_loss = tf.reduce_mean(total_loss)
+
+        self.gamma_x.assign( tf.sqrt(tf.reduce_mean(reconstruction_loss)))#added
+        self.loggamma_x.assign( tf.math.log(self.gamma_x)) #ådded
+
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         self.total_loss_tracker.update_state(total_loss)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         self.total_loss_no_weights_tracker.update_state(total_loss_no_weights)
+        #tf.print(self.gamma_x)
         return {
             "loss": self.total_loss_tracker.result(),
             "reconstruction_loss": self.reconstruction_loss_tracker.result(),
@@ -138,25 +148,52 @@ class CVAE(keras.Model):
         }
 
 
-# class TwoStageVaeModel(CVAE):
+class SecondStage(CVAE):
 
-#     def __init__(self, encoder, decoder, beta, shape, category_count, **kwargs):
-#         super(TwoStageVaeModel, self).__init__(encoder2, decoder2, second_depth, second_dim)
+    def __init__(self, encoder, decoder, beta, shape, category_count, **kwargs):
+        super(SecondStage, self).__init__(encoder2, decoder2, second_depth, second_dim)
 
-#     def extract_posterior(self, sess, x):
-#         #num_sample = np.shape(x)[0] lenght of dataset
-#         #num_iter = math.ceil(float(num_sample) / float(self.batch_size)) 
-#         num_iter = 1000 #fixed for now
-#         x_extend = np.concatenate([x, x[0:self.batch_size]], 0)
-#         mu_z, sd_z = [], []
-#         for i in range(num_iter):
-#             mu_z_batch, sd_z_batch = sess.run([self.mu_z, self.sd_z], feed_dict={self.raw_x: x_extend[i*self.batch_size:(i+1)*self.batch_size], self.is_training: False})
-#             mu_z.append(mu_z_batch)
-#             sd_z.append(sd_z_batch)
-#         mu_z = np.concatenate(mu_z, 0)[0:num_sample]
-#         sd_z = np.concatenate(sd_z, 0)[0:num_sample]
-#         return mu_z, sd_z
+    # def extract_posterior(self, sess, x):
+    #     #num_sample = np.shape(x)[0] lenght of dataset
+    #     #num_iter = math.ceil(float(num_sample) / float(self.batch_size)) 
+    #     num_iter = 1000 #fixed for now
+    #     x_extend = np.concatenate([x, x[0:self.batch_size]], 0)
+    #     mu_z, sd_z = [], []
+    #     for i in range(num_iter):
+    #         mu_z_batch, sd_z_batch = sess.run([self.mu_z, self.sd_z], feed_dict={self.raw_x: x_extend[i*self.batch_size:(i+1)*self.batch_size], self.is_training: False})
+    #         mu_z.append(mu_z_batch)
+    #         sd_z.append(sd_z_batch)
+    #     mu_z = np.concatenate(mu_z, 0)[0:num_sample]
+    #     sd_z = np.concatenate(sd_z, 0)[0:num_sample]
+        # return mu_z, sd_z
+
+    def loss2(self):
+        HALF_LOG_TWO_PI = 0.91893
+        self.loggamma_z = tf.log(self.gamma_z)
+        self.kl_loss2 = tf.reduce_sum(tf.square(self.mu_u) + tf.square(self.sd_u) - 2 * self.logsd_u - 1) / 2.0 / float(self.batch_size)
+        self.mse_loss2 = tf.losses.mean_squared_error(self.z, self.z_hat)
+        self.gen_loss2 = tf.reduce_sum(tf.square((self.z - self.z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
+        self.loss2 = self.kl_loss2 + self.gen_loss2 
 
 
 
-# self.is_training = tf.placeholder(tf.bool, [], 'is_training')
+#add: (1st stage)
+# initialize gamma_x = 1
+# initalize mseloss = 1
+
+# mseloss = min(mseloss, mseloss*.99+ reconstruction_loss*.01) #bmseloss: batch (mean) reconstruction error
+# gamma_x = np.sqrt(mseloss) 
+
+# -> reconstruction_loss = tf.reduce_sum(tf.square((self.x - self.x_hat) / self.gamma_x) / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI) / float(self.batch_size)
+
+#add: (2nd stage)
+# mseloss2 = np.mean(np.square(mu_z - z_hat), axis = (0,1))
+# gamma_z = np.sqrt(mseloss2)
+
+# encoder2: takes as input z, gives u_mean and u_log_var
+# decoder2: takes as input u, gives z_hat (same dimension as mu_z)
+
+#extract_posterior: takes x as input, gives mu_z (z_mean) and sd_z (z_log_var)
+
+#
+#self.z == z_cond
