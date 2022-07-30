@@ -183,6 +183,7 @@ class CVAE_balancing(CVAE):
         if isinstance(data, tuple):
             data = data[0]
         with tf.GradientTape() as tape:
+            HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
             input_img, input_label, conditional_input = self.conditional_input(data)
             z_mean, z_log_var = self.encoder(conditional_input)
             z_cond = self.sampling(z_mean, z_log_var, input_label)
@@ -193,20 +194,20 @@ class CVAE_balancing(CVAE):
                                     reconstruction), axis=(1, 2))
             
                         
-            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean)
-                      - tf.exp(z_log_var))
+            kl_loss = tf.reduce_sum (tf.square(z_mean) + tf.square(tf.exp(z_log_var)) - 2 * z_log_var - 1) / 2.0 / 100
 
-            kl_loss = tf.reduce_sum(kl_loss, axis=1) 
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
+
+
+            gen_loss = tf.reduce_sum(tf.square((input_img - reconstruction) / self.gamma_x) / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI) / 100
+            
             kl_loss = self.beta * kl_loss
-            HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
-     
+            
             
             if self.reconstruction_loss_tracker.result() > 0:
                 reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
 
-            gen_loss = .5 * (reconstruction_loss / self.gamma_x) + self.loggamma_x + HALF_LOG_TWO_PI #added
             total_loss = gen_loss + kl_loss
             total_loss = tf.reduce_mean(total_loss)
 
