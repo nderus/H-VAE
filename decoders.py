@@ -222,3 +222,21 @@ def bn_relu(inputs):
     bn = layers.BatchNormalization()(inputs)
     relu = layers.LeakyReLU(0.2)(bn)
     return(relu)
+
+#
+def decoder2(encoded_dim, category_count, second_dim, second_depth):
+
+    u_cond = layers.Input(shape=(encoded_dim + category_count,), dtype='float32',
+                name='Input')
+
+    u = layers.Dense(second_dim, name='fc')(u_cond)
+    u = layers.LeakyReLU(0.2)(u)
+
+    for i in range(second_depth - 1):
+        u = layers.Dense(second_dim, name='fc'+str(i))(u)
+        u = layers.LeakyReLU(0.2)(u)
+
+    u = layers.Concatenate(axis=-1)([u_cond, u]) 
+    z_hat = layers.Dense(encoded_dim + category_count, name='z_hat')(u)
+    model = keras.Model(u_cond, z_hat, name='decoder2')
+    return model

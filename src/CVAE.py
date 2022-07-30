@@ -161,8 +161,11 @@ class CVAE_balancing(CVAE):
             name="val_reconstruction_loss")
         self.val_kl_loss_tracker = keras.metrics.Mean(name="val_kl_loss")
         self.val_total_loss_no_weights_tracker = keras.metrics.Mean(name="val_loss_no_weights")
+        self.mse_loss2_tracker = keras.metrics.Mean(
+            name="mse_loss2")
+        self.val_mse_loss2_tracker = keras.metrics.Mean(
+            name="val_mse_loss2")
 
-    
 
     @property
     def metrics(self):
@@ -175,6 +178,8 @@ class CVAE_balancing(CVAE):
             self.val_kl_loss_tracker,
             self.total_loss_no_weights_tracker,
             self.val_total_loss_no_weights_tracker,
+            self.mse_loss2_tracker,
+            self.val_mse_loss2_tracker,
         ]
 
 
@@ -202,8 +207,8 @@ class CVAE_balancing(CVAE):
             kl_loss = self.beta * kl_loss
             
             
-            if self.reconstruction_loss_tracker.result() > 0:
-                reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
+            # if self.reconstruction_loss_tracker.result() > 0:
+            #     reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
             total_loss = gen_loss + kl_loss
             total_loss = tf.reduce_mean(total_loss)
 
@@ -225,55 +230,28 @@ class CVAE_balancing(CVAE):
 
         }
 
-    def encoder2(self):
-        z_cond = layers.Input(shape=(100 + self.category_count,), dtype='float32',
-                name='Input')
-        t = layers.Dense(self.second_dim, name='fc'+'0')(z_cond)
-        t = layers.LeakyReLU(0.2)(t)
-        for i in range(self.second_depth - 1):
-            t = layers.Dense( self.second_dim, name='fc'+str(i))(t)
-            t = layers.LeakyReLU(0.2)(t)
-        t = layers.Concatenate(axis=-1)([z_cond, t]) 
-
-        self.mu_u = layers.Dense( self.latent_dim, name='mu_u')(t)
-        self.mu_u = layers.Dense( self.latent_dim, name='logsd_u')(t)
-        self.sd_u = tf.exp(self.sd_u)
-        self.u = self.sampling(self.mu_u, self.u_log_var, input_label)
-    
-    def decoder2(self):
-
-        u_cond = layers.Input(shape=(100 + self.category_count,), dtype='float32',
-                    name='Input')
-
-        u = layers.Dense(self.second_dim, name='fc'+'0')(u_cond)
-        u = layers.LeakyReLU(0.2)(u)
-
-        for i in range(self.second_depth - 1):
-            u = layers.Dense( self.second_dim, name='fc'+str(i))(u)
-            u = layers.LeakyReLU(0.2)(u)
-
-        u = layers.Concatenate(axis=-1)([u_cond, u]) 
-        self.z_hat = layers.Dense(self.encoded_dim, name='z_hat')(u)
 
     @tf.function()
-    def stage2(self):
-        iteration_per_epoch = num_sample // self.batch_size
-        idx = np.arange(num_sample)
-        for epoch in range(epochs2):
+    def stage2(self, z_cond, input_label):
             with tf.GradientTape() as tape:
                 
                 HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
-                self.loggamma_z = tf.log(self.gamma_z)
-                kl_loss2 = tf.reduce_sum(tf.square(self.mu_u) + tf.square(self.sd_u) - 2 * self.logsd_u - 1) / 2.0 / float(self.batch_size)
-                mse_loss2 = tf.losses.mean_squared_error(self.z, self.z_hat)
+
+                mu_u, logsd_u, sd_u = self.encoder2(z_cond)
+                u_cond = self.sampling(mu_u, logsd_u, input_label)
+                z_hat = self.decoder2(u_cond)
+
+                self.loggamma_z = tf.math.log(self.gamma_z)
+                kl_loss2 = tf.reduce_sum(tf.square(mu_u) + tf.square(sd_u) - 2 * logsd_u - 1) / 2.0 / float(self.batch_size)
+                mse_loss2 = tf.losses.mean_squared_error(z_cond, z_hat)
                 if self.mse_loss2_tracker.result() > 0:
                     mse_loss2 = tf.minimum(self.mse_loss2_tracker.result(), self.mse_loss2_tracker.result()*.99 + mse_loss2 *.01) #min between cumulated reconstruction loss and this ba
 
-                gen_loss2 = tf.reduce_sum(tf.square((self.z - self.z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
+                gen_loss2 = tf.reduce_sum(tf.square((z_cond - z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
                 loss2 = kl_loss2 + gen_loss2 
          
-            self.gamma_z.assign( tf.sqrt(mse_loss2))#added
-            self.loggamma_z.assign( tf.math.log(self.gamma_z)) #ådded
+            self.gamma_z.assign( tf.Variable(tf.sqrt(mse_loss2)))#added
+            self.loggamma_z.assign(tf.Variable( tf.math.log(self.gamma_z))) #ådded
             
             grads = tape.gradient(loss2, self.trainable_weights)
             self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -306,3 +284,71 @@ class CVAE_balancing(CVAE):
 #self.z == z_cond
 
 #loss2 + optimizer 2 -> grads
+
+# 2nd stage takes as input z_mean, z_log_var
+
+
+class SecondStage(CVAE):
+    def __init__(self, encoder2, decoder2, category_count, batch_size,  **kwargs):
+        super(CVAE, self).__init__(**kwargs)
+        self.encoder2 = encoder2
+        self.decoder2 = decoder2
+        self.category_count = category_count
+        self.batch_size = batch_size
+        self.gamma_z = tf.Variable(1.)
+        self.loggamma_z = tf.Variable(1.)
+        self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
+        self.mse_loss2_tracker = keras.metrics.Mean(name="mse_loss2")
+        self.total_loss_tracker = keras.metrics.Mean(name="loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.mse_loss2_tracker,
+            self.kl_loss_tracker,
+            self.total_loss_tracker,
+        ]
+    
+    @tf.function()
+    def train_step(self, data):
+        if isinstance(data, tuple):
+            data = data[0]
+
+        z_cond = data[0]
+        input_label = data[1]
+
+        with tf.GradientTape() as tape:
+
+            HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
+
+            mu_u, logsd_u, sd_u = self.encoder2(z_cond)
+            u_cond = self.sampling(mu_u, logsd_u, input_label)
+            z_hat = self.decoder2(u_cond)
+
+            kl_loss2 = tf.reduce_sum(tf.square(mu_u) + tf.square(sd_u) - 2 * logsd_u - 1) / 2.0 / float(self.batch_size)
+            print('kl_loss2', kl_loss2.shape)
+            mse_loss2 = tf.reduce_sum(tf.losses.mean_squared_error(z_cond, z_hat)) / float(self.batch_size)
+            print('mse_loss2', mse_loss2.shape)
+            
+            # if self.mse_loss2_tracker.result() > 0:
+            #     mse_loss2 = tf.minimum(self.mse_loss2_tracker.result(), self.mse_loss2_tracker.result()*.99 + mse_loss2 *.01) #min between cumulated reconstruction loss and this ba
+            print( tf.sqrt(mse_loss2).shape)
+
+            gen_loss2 = tf.reduce_sum(tf.square((z_cond - z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
+            loss2 = kl_loss2 + gen_loss2 
+        
+        self.gamma_z.assign( tf.sqrt(mse_loss2))#added
+        self.loggamma_z.assign( tf.math.log(self.gamma_z)) #ådded
+        
+        grads = tape.gradient(loss2, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        self.total_loss_tracker.update_state(loss2)
+        self.mse_loss2_tracker.update_state(mse_loss2)
+        self.kl_loss_tracker.update_state(kl_loss2)
+        return {
+                "loss": self.total_loss_tracker.result(),
+                "reconstruction_loss": self.mse_loss2_tracker.result(),
+                "kl_loss": self.kl_loss_tracker.result(),
+     
+            }
+

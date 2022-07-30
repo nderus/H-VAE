@@ -290,3 +290,22 @@ class EncoderMixNet18(EncoderMixNet):
     def model(self, input_shape):
         x = layers.Input(input_shape, name='input', dtype='float32')
         return keras.models.Model(x, self.call(x), name='encoder')
+
+
+#
+import tensorflow as tf
+def encoder2(encoded_dim, category_count, second_dim, second_depth):
+    z_cond = layers.Input(shape=(encoded_dim + category_count,), dtype='float32',
+            name='Input')
+    t = layers.Dense(second_dim, name='fc')(z_cond)
+    t = layers.LeakyReLU(0.2)(t)
+    for i in range(second_depth - 1):
+        t = layers.Dense(second_dim, name='fc'+str(i))(t)
+        t = layers.LeakyReLU(0.2)(t)
+    t = layers.Concatenate(axis=-1)([z_cond, t]) 
+
+    mu_u = layers.Dense(encoded_dim, name='mu_u')(t)
+    logsd_u = layers.Dense( encoded_dim, name='logsd_u')(t)
+    sd_u = tf.exp(logsd_u)
+    model = keras.Model(z_cond, [mu_u, logsd_u, sd_u], name='encoder2')
+    return model
