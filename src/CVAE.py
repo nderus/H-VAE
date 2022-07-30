@@ -196,9 +196,13 @@ class CVAE_balancing(CVAE):
 
             reconstruction_loss = tf.reduce_sum(
                  keras.losses.MSE(input_img, 
-                                    reconstruction), axis=(0, 1, 2))
+                                    reconstruction), axis=( 1, 2))
             
-            kl_loss = tf.reduce_sum (tf.square(z_mean) + tf.square(tf.exp(z_log_var)) - 2 * z_log_var - 1) / 2.0 / 100
+
+            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean)
+                     - tf.exp(z_log_var))
+
+
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
 
@@ -259,7 +263,6 @@ class CVAE_balancing(CVAE):
             self.mse_loss2_tracker.update_state(mse_loss2)
             self.kl_loss_tracker.update_state(kl_loss2)
 
-                
 
 
 #add: (1st stage)
@@ -326,13 +329,10 @@ class SecondStage(CVAE):
             z_hat = self.decoder2(u_cond)
 
             kl_loss2 = tf.reduce_sum(tf.square(mu_u) + tf.square(sd_u) - 2 * logsd_u - 1) / 2.0 / float(self.batch_size)
-            print('kl_loss2', kl_loss2.shape)
             mse_loss2 = tf.reduce_sum(tf.losses.mean_squared_error(z_cond, z_hat)) / float(self.batch_size)
-            print('mse_loss2', mse_loss2.shape)
             
             # if self.mse_loss2_tracker.result() > 0:
             #     mse_loss2 = tf.minimum(self.mse_loss2_tracker.result(), self.mse_loss2_tracker.result()*.99 + mse_loss2 *.01) #min between cumulated reconstruction loss and this ba
-            print( tf.sqrt(mse_loss2).shape)
 
             gen_loss2 = tf.reduce_sum(tf.square((z_cond - z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
             loss2 = kl_loss2 + gen_loss2 
@@ -352,3 +352,8 @@ class SecondStage(CVAE):
      
             }
 
+    def call(self, z_cond, input_label):
+        mu_u, logsd_u, _ = self.encoder2(z_cond)
+        u_cond = self.sampling(mu_u, logsd_u, input_label)
+        z_hat = self.decoder2(u_cond)
+        return z_hat

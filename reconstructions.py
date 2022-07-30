@@ -21,7 +21,6 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
         _, axs = plt.subplots(2, image_count, figsize=(20, 4))
         for i in range(image_count):
             random_idx = random.randint(0, reconstruction_train.shape[0]-1)
-            fixed_idx = range(0, image_count)
             axs[0, i].imshow(train_x[random_idx])
             axs[0, i].axis('off')
             if len(labels) <= 10:
