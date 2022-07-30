@@ -193,24 +193,19 @@ class CVAE_balancing(CVAE):
                  keras.losses.MSE(input_img, 
                                     reconstruction), axis=(0, 1, 2))
             
-            print(reconstruction_loss.shape)            
             kl_loss = tf.reduce_sum (tf.square(z_mean) + tf.square(tf.exp(z_log_var)) - 2 * z_log_var - 1) / 2.0 / 100
-            print('kl_loss', kl_loss.shape)
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
 
 
             gen_loss = tf.reduce_sum(tf.square((input_img - reconstruction) / self.gamma_x) / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI) / 100
-            print('gen loss', gen_loss.shape)
             kl_loss = self.beta * kl_loss
             
             
             if self.reconstruction_loss_tracker.result() > 0:
                 reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
-                print('sub recon', reconstruction_loss.shape)
             total_loss = gen_loss + kl_loss
             total_loss = tf.reduce_mean(total_loss)
-            print('final tot', total_loss.shape)
 
         self.gamma_x.assign( tf.sqrt(tf.reduce_mean(reconstruction_loss)))#added
         self.loggamma_x.assign( tf.math.log(self.gamma_x)) #ådded
