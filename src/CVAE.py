@@ -176,8 +176,8 @@ class CVAE_balancing(CVAE):
             self.total_loss_no_weights_tracker,
             self.val_total_loss_no_weights_tracker,
         ]
-       
-    
+
+
     @tf.function
     def train_step(self, data):
         if isinstance(data, tuple):
@@ -227,7 +227,63 @@ class CVAE_balancing(CVAE):
 
         }
 
+    def encoder2(self):
+        z_cond = layers.Input(shape=(100 + self.category_count,), dtype='float32',
+                name='Input')
+        t = layers.Dense(self.second_dim, name='fc'+'0')(z_cond)
+        t = layers.LeakyReLU(0.2)(t)
+        for i in range(self.second_depth - 1):
+            t = layers.Dense( self.second_dim, name='fc'+str(i))(t)
+            t = layers.LeakyReLU(0.2)(t)
+        t = layers.Concatenate(axis=-1)([z_cond, t]) 
 
+        self.mu_u = layers.Dense( self.latent_dim, name='mu_u')(t)
+        self.mu_u = layers.Dense( self.latent_dim, name='logsd_u')(t)
+        self.sd_u = tf.exp(self.sd_u)
+        self.u = self.sampling(self.mu_u, self.u_log_var, input_label)
+    
+    def decoder2(self):
+
+        u_cond = layers.Input(shape=(100 + self.category_count,), dtype='float32',
+                    name='Input')
+
+        u = layers.Dense(self.second_dim, name='fc'+'0')(u_cond)
+        u = layers.LeakyReLU(0.2)(u)
+
+        for i in range(self.second_depth - 1):
+            u = layers.Dense( self.second_dim, name='fc'+str(i))(u)
+            u = layers.LeakyReLU(0.2)(u)
+
+        u = layers.Concatenate(axis=-1)([u_cond, u]) 
+        self.z_hat = layers.Dense(self.encoded_dim, name='z_hat')(u)
+
+    @tf.function()
+    def stage2(self):
+        iteration_per_epoch = num_sample // self.batch_size
+        idx = np.arange(num_sample)
+        for epoch in range(epochs2):
+            with tf.GradientTape() as tape:
+                
+                HALF_LOG_TWO_PI = tf.constant(0.91893,  dtype=tf.float32)# added
+                self.loggamma_z = tf.log(self.gamma_z)
+                kl_loss2 = tf.reduce_sum(tf.square(self.mu_u) + tf.square(self.sd_u) - 2 * self.logsd_u - 1) / 2.0 / float(self.batch_size)
+                mse_loss2 = tf.losses.mean_squared_error(self.z, self.z_hat)
+                if self.mse_loss2_tracker.result() > 0:
+                    mse_loss2 = tf.minimum(self.mse_loss2_tracker.result(), self.mse_loss2_tracker.result()*.99 + mse_loss2 *.01) #min between cumulated reconstruction loss and this ba
+
+                gen_loss2 = tf.reduce_sum(tf.square((self.z - self.z_hat) / self.gamma_z) / 2.0 + self.loggamma_z + HALF_LOG_TWO_PI) / float(self.batch_size)
+                loss2 = kl_loss2 + gen_loss2 
+         
+            self.gamma_z.assign( tf.sqrt(mse_loss2))#added
+            self.loggamma_z.assign( tf.math.log(self.gamma_z)) #ådded
+            
+            grads = tape.gradient(loss2, self.trainable_weights)
+            self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+            self.total_loss_tracker.update_state(loss2)
+            self.mse_loss2_tracker.update_state(mse_loss2)
+            self.kl_loss_tracker.update_state(kl_loss2)
+
+                
 
 
 #add: (1st stage)
@@ -249,5 +305,6 @@ class CVAE_balancing(CVAE):
 
 #extract_posterior: takes x as input, gives mu_z (z_mean) and sd_z (z_log_var)
 
-#
 #self.z == z_cond
+
+#loss2 + optimizer 2 -> grads
