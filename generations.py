@@ -7,12 +7,14 @@ import numpy as np
 import wandb
 
 class Generations:
-    def __init__(self, model, encoded_dim, category_count, input_shape, labels):
+    def __init__(self, model, encoded_dim, category_count, input_shape, labels, model2 = None, second_stage = False):
         self.model = model
         self.encoded_dim = encoded_dim
         self.category_count = category_count
         self.input_shape = input_shape
         self.labels = labels
+        self.model2 = model2
+        self.second_stage = second_stage
 
     def reparametrization(self, z_mean, z_log_var, input_label):
         """ Performs the riparametrization trick"""
@@ -32,6 +34,8 @@ class Generations:
             a = tf.convert_to_tensor(digit_label_one_hot)
             b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
             z_cond = self.reparametrization(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
+            if self.second_stage:
+                z_cond = self.model2.posterior(z_cond, b)
             decoded_x = self.model.decoder.predict(z_cond)
             digit_0 = decoded_x[0].reshape(self.input_shape) 
             digit_1 = decoded_x[1].reshape(self.input_shape) 
@@ -43,8 +47,10 @@ class Generations:
             axs[1, i].axis('off')
             if len(self.labels) <= 10:
                 axs[1, i].set_title(self.labels[digit_label])
-            #wandb.log({"Generations: {}".format(digit_label): wandb.Image(plt)})
-        wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
+        if second_stage:
+            wandb.log({"Generations 2nd stage": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) })
+        else:
+            wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
 
     def generations_celeba(self, target_attr, batch_size = 100):
         image_count = 10
@@ -62,6 +68,8 @@ class Generations:
             a = tf.convert_to_tensor(labels,dtype="float")
             b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
             z_cond = self.reparametrization(z_mean=0, z_log_var=0.3, input_label = b)
+            if self.second_stage:
+                z_cond = self.model2.posterior(z_cond, b)
             decoded_x = self.model.decoder.predict(z_cond)
             digit_0 = decoded_x[0].reshape(self.input_shape) 
             digit_1 = decoded_x[1].reshape(self.input_shape) 
@@ -71,8 +79,10 @@ class Generations:
             axs[1, i].axis('off')
 
         attributes = str(self.labels[target_attr].tolist())
-        #wandb.log({"Generations:_{}".format(attributes): wandb.Image(plt)})
-        wandb.log({"Generations": wandb.Image(plt, caption="Attributes:{}".format( attributes)) }) #
+        if self.second_stage:
+            wandb.log({"Generations 2nd stage": wandb.Image(plt, caption="Attributes:{}".format( attributes)) }) #
+        else:
+            wandb.log({"Generations": wandb.Image(plt, caption="Attributes:{}".format( attributes)) }) #
 
     
     def latent_space_interpolation(self, digit_label=1):
@@ -97,6 +107,8 @@ class Generations:
                 single_row_generated_images.append(decoded_x[0].reshape(self.input_shape)) # changed, need testing
                 generated_images.append(single_row_generated_images)      
         plot_generated_images(generated_images,n,n,True)
+    
+    
     
     def __call__(self):
 
@@ -127,3 +139,4 @@ def plot_generated_images(generated_images, nrows, ncols, digit_label,
   wandb.log({"Latent_interpolation": wandb.Image(plt, caption="Class:{}".format( digit_label)) }) #
 
   plt.show()
+

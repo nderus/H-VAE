@@ -46,3 +46,20 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
 
 ####
 
+def reconstructions2(model, train_x, train_y, z_hat, labels):
+    reconstruction = model.decoder(z_hat[:20])
+
+    if reconstruction.shape[3] == 1:
+        reconstruction = np.squeeze(np.array(reconstruction), axis=3)
+
+    image_count = 10
+
+    _, axs = plt.subplots(2, image_count, figsize=(20, 4))
+    for i in range(image_count):
+        axs[0, i].imshow(train_x[i])
+        axs[0, i].axis('off')
+        if len(labels) <= 10:
+            axs[0, i].set_title( labels[int(train_y[i])]  )
+        axs[1, i].imshow(reconstruction[i])
+        axs[1, i].axis('off')
+    wandb.log({"Reconstructions 2nd stage": wandb.Image(plt, caption="Set:{}".format(set)) }) #

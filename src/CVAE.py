@@ -202,6 +202,7 @@ class CVAE_balancing(CVAE):
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean)
                      - tf.exp(z_log_var))
 
+            kl_loss = tf.reduce_sum(kl_loss, axis=1) 
 
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
@@ -352,7 +353,7 @@ class SecondStage(CVAE):
      
             }
 
-    def call(self, z_cond, input_label):
+    def posterior(self, z_cond, input_label):
         mu_u, logsd_u, _ = self.encoder2(z_cond)
         u_cond = self.sampling(mu_u, logsd_u, input_label)
         z_hat = self.decoder2(u_cond)
