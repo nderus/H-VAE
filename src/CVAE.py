@@ -208,7 +208,9 @@ class CVAE_balancing(CVAE):
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
 
 
-            gen_loss = tf.reduce_sum(tf.square((input_img - reconstruction) / self.gamma_x) / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI) / 100
+            #gen_loss = tf.reduce_sum(tf.square((input_img - reconstruction) / self.gamma_x) / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI) / 100
+            gen_loss = reconstruction_loss / self.gamma_x / 2.0 + self.loggamma_x + HALF_LOG_TWO_PI
+            
             kl_loss = self.beta * kl_loss
             
             
