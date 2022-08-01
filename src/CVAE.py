@@ -214,8 +214,8 @@ class CVAE_balancing(CVAE):
             kl_loss = self.beta * kl_loss
             
             
-            # if self.reconstruction_loss_tracker.result() > 0:
-            #     reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
+            if self.reconstruction_loss_tracker.result() > 0:
+                reconstruction_loss = tf.minimum(self.reconstruction_loss_tracker.result(), self.reconstruction_loss_tracker.result()*.99 + reconstruction_loss *.01) #min between cumulated reconstruction loss and this batch.
             total_loss = gen_loss + kl_loss
             total_loss = tf.reduce_mean(total_loss)
 
