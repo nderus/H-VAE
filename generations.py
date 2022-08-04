@@ -47,7 +47,7 @@ class Generations:
             axs[1, i].axis('off')
             if len(self.labels) <= 10:
                 axs[1, i].set_title(self.labels[digit_label])
-        if second_stage:
+        if self.second_stage:
             wandb.log({"Generations 2nd stage": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) })
         else:
             wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
