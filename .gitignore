@@ -134,4 +134,6 @@ cvae_encoder/
 cvae_decoder/
 
 #tfrecords
-~/ 
+~/tensorflow_datasets/ 
+~/
+/~/
