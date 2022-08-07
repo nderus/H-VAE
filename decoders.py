@@ -212,7 +212,7 @@ def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, re
                     padding='same',
                     name='up_block6_conv2',  kernel_regularizer=regularizer)(x)
     x = bn_relu(x)                                
-    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=3,
+    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=1, #was 3 (!)
                              strides=final_stride, activation='sigmoid',padding='same')(x)
 
     model = keras.Model(decoder_inputs, outputs, name='decoder')
