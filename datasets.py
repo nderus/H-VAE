@@ -113,14 +113,14 @@ def data_loader(name, root_folder):
             X.append(features)
             y.append(label) 
         
-        X = np.array(X).reshape(-1, 64, 64, 3)
+        X = np.array(X).reshape(-1, 48, 48, 3) #was 64
         y = np.array(y)
         train_x, test_x, train_y, test_y = train_test_split(X, y, test_size = 0.2, random_state=11, shuffle=False)
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size = 0.25, random_state=11, shuffle=False)
         train_y_one_hot = to_categorical(train_y, category_count)
         test_y_one_hot = to_categorical(test_y, category_count)
         val_y_one_hot = to_categorical(val_y, category_count) 
-        input_shape = (64, 64, 3)
+        input_shape = (48, 48, 3) #was 64
                               
         labels = ['non-cancer','cancer']
     
