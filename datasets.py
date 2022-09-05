@@ -99,9 +99,9 @@ def data_loader(name, root_folder):
                 class1.append(filename)
 
         random.seed(11)
-        sampled_class0 = random.sample(class0, 198730) # TO DO: use whole dataset
+        sampled_class0 = random.sample(class0, 198700) # TO DO: use whole dataset
         random.seed(11)
-        sampled_class1 = random.sample(class1, 78780)
+        sampled_class1 = random.sample(class1, 78700)
         class0_array = get_image_arrays(sampled_class0, 0)
         class1_array = get_image_arrays(sampled_class1, 1)
         combined_data = np.concatenate((class0_array, class1_array))
