@@ -159,7 +159,7 @@ def get_image_arrays(data, label):
     for i in data:
         if i.endswith('.png'):
             img = cv2.imread(i ,cv2.IMREAD_COLOR)
-            img_sized = cv2.resize(img, (64, 64), #was (70,70) 
+            img_sized = cv2.resize(img, (48, 48), #was (64,64) 
                         interpolation=cv2.INTER_LINEAR)
             img_arrays.append([img_sized, label]) 
     return img_arrays
