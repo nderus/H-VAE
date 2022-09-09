@@ -99,7 +99,7 @@ def data_loader(name, root_folder):
                 class1.append(filename)
 
         random.seed(11)
-        sampled_class0 = random.sample(class0, 78786) # TO DO: use whole dataset
+        sampled_class0 = random.sample(class0, 78784) # TO DO: use whole dataset
         random.seed(11)
         sampled_class1 = random.sample(class1, 78786)
         class0_array = get_image_arrays(sampled_class0, 0)
