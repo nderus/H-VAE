@@ -309,3 +309,89 @@ def encoder2(encoded_dim, category_count, second_dim, second_depth):
     sd_u = tf.exp(logsd_u)
     model = keras.Model(z_cond, [mu_u, logsd_u, sd_u], name='encoder2')
     return model
+
+### unet encoder
+
+def sinusoidal_embedding(x):
+    embedding_min_frequency = 1.0
+    frequencies = tf.exp(
+        tf.linspace(
+            tf.math.log(embedding_min_frequency),
+            tf.math.log(embedding_max_frequency),
+            embedding_dims // 2,
+        )
+    )
+    angular_speeds = 2.0 * math.pi * frequencies
+    embeddings = tf.concat(
+        [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3
+    )
+    return embeddings
+
+
+def ResidualBlock(width):
+    def apply(x):
+        input_width = x.shape[3]
+        if input_width == width:
+            residual = x
+        else:
+            residual = layers.Conv2D(width, kernel_size=1)(x)
+        x = layers.BatchNormalization(center=False, scale=False)(x)
+        x = layers.Conv2D(
+            width, kernel_size=3, padding="same", activation=keras.activations.swish
+        )(x)
+        x = layers.Conv2D(width, kernel_size=3, padding="same")(x)
+        x = layers.Add()([x, residual])
+        return x
+
+    return apply
+
+
+def DownBlock(width, block_depth):
+    def apply(x):
+        x, skips = x
+        for _ in range(block_depth):
+            x = ResidualBlock(width)(x)
+            skips.append(x)
+        x = layers.AveragePooling2D(pool_size=2)(x)
+        return x
+
+    return apply
+
+
+def UpBlock(width, block_depth):
+    def apply(x):
+        x, skips = x
+        x = layers.UpSampling2D(size=2, interpolation="bilinear")(x)
+        for _ in range(block_depth):
+            x = layers.Concatenate()([x, skips.pop()])
+            x = ResidualBlock(width)(x)
+        return x
+
+    return apply
+
+
+def unet_encoder( widths, block_depth, input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
+
+    inputs = layers.Input(shape=(input_shape[0],
+                input_shape[1], input_shape[2] + label_size), dtype='float32',
+                name='Input')
+
+    x = layers.Conv2D(widths[0], kernel_size=1)(inputs)
+
+    skips = []
+    for width in widths[:-1]:
+        x = DownBlock(width, block_depth)([x, skips])
+
+    for _ in range(block_depth):
+        x = ResidualBlock(widths[-1])(x)
+
+    for width in reversed(widths[:-1]):
+        x = UpBlock(width, block_depth)([x, skips])
+
+    x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(x)
+    x = layers.Flatten()(x)
+    y = layers.Dense(encoded_dim)(x) #removed 2*
+    mu = layers.Dense(encoded_dim, name='mu')(y)
+    log_var = layers.Dense(encoded_dim, name='log_var')(y)
+
+    return keras.Model(inputs, [mu, log_var], name="unet_encoder")
