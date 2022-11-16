@@ -236,15 +236,15 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
                       name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(512, (3, 3),
                     padding='same',
-                     activation = 'relu'
+                     activation = 'relu',
                     name='up_block4_conv2',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(512, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block4_conv3',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(512, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block4_conv4',  kernel_regularizer=regularizer)(x)    
     x = layers.UpSampling2D()(x)
     # block 2
@@ -254,15 +254,15 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
                       name='up_block5_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(512, (3, 3),
                     padding='same',
-                     activation = 'relu'
+                     activation = 'relu',
                     name='up_block5_conv2',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(512, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block5_conv3',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(512, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block5_conv4',  kernel_regularizer=regularizer)(x)    
     x = layers.UpSampling2D()(x)
 
@@ -273,15 +273,15 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
                       name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(256, (3, 3),
                     padding='same',
-                     activation = 'relu'
+                     activation = 'relu',
                     name='up_block6_conv2',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(256, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block6_conv3',  kernel_regularizer=regularizer)(x)  
     x = layers.Conv2DTranspose(256, (3, 3),
                 padding='same',
-                 activation = 'relu'
+                 activation = 'relu',
                 name='up_block6_conv4',  kernel_regularizer=regularizer)(x)    
     x = layers.UpSampling2D()(x)   
     
@@ -289,18 +289,20 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
     x = layers.Conv2DTranspose(128, (3, 3),
                       padding='same',
                       activation = 'relu',
-                      name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+                      name='up_block7_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(128, (3, 3),
                     padding='same',
-                     activation = 'relu'
+                     activation = 'relu',
+                      name='up_block7_conv2', kernel_regularizer=regularizer)(x)
     x = layers.UpSampling2D()(x)
     x = layers.Conv2DTranspose(64, (3, 3),
                       padding='same',
                       activation = 'relu',
-                      name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+                      name='up_block7_conv3', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(64, (3, 3),
                     padding='same',
-                     activation = 'relu'                           
+                    activation = 'relu',
+                    name='up_block6_conv4', kernel_regularizer=regularizer)(x)
     
     outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=1, #was 3 (!)
                              strides=final_stride, activation='sigmoid',padding='same')(x)
