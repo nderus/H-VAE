@@ -218,6 +218,96 @@ def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, re
     model = keras.Model(decoder_inputs, outputs, name='decoder')
     return model
 
+def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
+
+    decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
+                                 name='decoder_input')
+    x = layers.Dense(encoded_dim)
+
+    x = layers.Dense(encoded_dim * 2 )
+ 
+    x = layers.Dense(3 * 3 * 512)(decoder_inputs)
+   
+    x = layers.Reshape(target_shape=(3, 3, 512))(x)
+ 
+    x = layers.Conv2DTranspose(512, (3, 3),
+                      padding='same',
+                      activation = 'relu',
+                      name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(512, (3, 3),
+                    padding='same',
+                     activation = 'relu'
+                    name='up_block4_conv2',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(512, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block4_conv3',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(512, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block4_conv4',  kernel_regularizer=regularizer)(x)    
+    x = layers.UpSampling2D()(x)
+    # block 2
+    x = layers.Conv2DTranspose(512, (3, 3),
+                      padding='same',
+                      activation = 'relu',
+                      name='up_block5_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(512, (3, 3),
+                    padding='same',
+                     activation = 'relu'
+                    name='up_block5_conv2',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(512, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block5_conv3',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(512, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block5_conv4',  kernel_regularizer=regularizer)(x)    
+    x = layers.UpSampling2D()(x)
+
+    # block 3
+    x = layers.Conv2DTranspose(256, (3, 3),
+                      padding='same',
+                      activation = 'relu',
+                      name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(256, (3, 3),
+                    padding='same',
+                     activation = 'relu'
+                    name='up_block6_conv2',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(256, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block6_conv3',  kernel_regularizer=regularizer)(x)  
+    x = layers.Conv2DTranspose(256, (3, 3),
+                padding='same',
+                 activation = 'relu'
+                name='up_block6_conv4',  kernel_regularizer=regularizer)(x)    
+    x = layers.UpSampling2D()(x)   
+    
+    #block 4
+    x = layers.Conv2DTranspose(128, (3, 3),
+                      padding='same',
+                      activation = 'relu',
+                      name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(128, (3, 3),
+                    padding='same',
+                     activation = 'relu'
+    x = layers.UpSampling2D()(x)
+    x = layers.Conv2DTranspose(64, (3, 3),
+                      padding='same',
+                      activation = 'relu',
+                      name='up_block6_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(64, (3, 3),
+                    padding='same',
+                     activation = 'relu'                           
+    
+    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=1, #was 3 (!)
+                             strides=final_stride, activation='sigmoid',padding='same')(x)
+
+    model = keras.Model(decoder_inputs, outputs, name='decoder')
+    return model
+
 def bn_relu(inputs):
     bn = layers.BatchNormalization()(inputs)
     relu = layers.LeakyReLU(0.2)(bn)
