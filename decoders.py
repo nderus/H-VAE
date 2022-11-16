@@ -302,7 +302,7 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
     x = layers.Conv2DTranspose(64, (3, 3),
                     padding='same',
                     activation = 'relu',
-                    name='up_block6_conv4', kernel_regularizer=regularizer)(x)
+                    name='up_block7_conv4', kernel_regularizer=regularizer)(x)
     
     outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=1, #was 3 (!)
                              strides=final_stride, activation='sigmoid',padding='same')(x)
