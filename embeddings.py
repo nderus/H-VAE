@@ -77,7 +77,7 @@ def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), 
   if category_count == 10:
     colors = np.array(['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])
   
-  elif cateogry_count == 2:
+  elif category_count == 2:
     colors = np.array(['#1f77b4', '#ff7f0e'])
   
   else:
