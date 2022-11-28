@@ -332,3 +332,48 @@ def decoder2(encoded_dim, category_count, second_dim, second_depth):
     z_hat = layers.Dense(encoded_dim + category_count, name='z_hat')(u)
     model = keras.Model(u_cond, z_hat, name='decoder2')
     return model
+#
+def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
+
+    decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
+                                 name='decoder_input')
+    x = layers.Dense(encoded_dim)
+
+    x = layers.Dense(encoded_dim * 2 )
+ 
+    x = layers.Dense(input_shape[0]/2 * input_shape[1]/2 * 64)(decoder_inputs)
+   
+    x = layers.Reshape(target_shape=(int(input_shape[0]/2),
+                     int(input_shape[1]/2), 64))(x)
+    x = bn_relu(x) 
+    x = layers.Conv2DTranspose(64, (3, 3),
+                      padding='same',
+                      name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+    x = layers.Conv2DTranspose(64, (3, 3),
+                    padding='same',
+                    name='up_block4_conv2',  kernel_regularizer=regularizer)(x)  
+    x = bn_relu(x) 
+    # block 2
+    x = layers.Conv2DTranspose(32, (3, 3),
+                      padding='same',
+                      name='up_block5_conv1',  kernel_regularizer=regularizer)(x)
+    x = layers.Conv2DTranspose(32, (3, 3),
+                      padding='same',
+                      name='up_block5_conv2',  kernel_regularizer=regularizer)(x)
+    x = bn_relu(x) 
+    x = layers.UpSampling2D()(x)
+    
+    # block 3
+    x = layers.Conv2DTranspose(16, (3, 3),
+                      padding='same',
+                      name='up_block6_conv1',  kernel_regularizer=regularizer)(x)
+
+    x = layers.Conv2DTranspose(16, (3, 3),
+                    padding='same',
+                    name='up_block6_conv2',  kernel_regularizer=regularizer)(x)
+    x = bn_relu(x)                                
+    outputs = layers.Conv2DTranspose(filters=input_shape[-1], kernel_size=1, #was 3 (!)
+                             strides=final_stride, activation='sigmoid',padding='same')(x)
+
+    model = keras.Model(decoder_inputs, outputs, name='decoder')
+    return model
