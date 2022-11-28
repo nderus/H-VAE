@@ -365,7 +365,7 @@ class SecondStage(CVAE):
 
 class CVAE_filters(keras.Model):
     def __init__(self, encoder, decoder, beta, shape, category_count, **kwargs):
-        super(CVAE, self).__init__(**kwargs)
+        super(CVAE_filters, self).__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
         self.beta = beta
@@ -430,7 +430,7 @@ class CVAE_filters(keras.Model):
         image_size = [tf.shape(z_log_var)[1], tf.shape(z_log_var)[2], tf.shape(z_log_var)[3]]
         labels = tf.reshape(input_label, [-1, 1, 1, self.category_count])
         labels = tf.cast(labels, dtype='float32')
-        ones = tf.ones([tf.shape(z_log_var)[0] + image_size[0:-1] + [self.category_count])
+        ones = tf.ones([tf.shape(z_log_var)[0]] + image_size[0:-1] + [self.category_count])
         input_label = ones * labels
         z_cond = tf.concat([z, input_label], axis=1)
         return z_cond
