@@ -432,7 +432,7 @@ class CVAE_filters(keras.Model):
         labels = tf.cast(labels, dtype='float32')
         ones = tf.ones([tf.shape(z_log_var)[0]] + image_size[0:-1] + [self.category_count])
         input_label = ones * labels
-        z_cond = tf.concat([z, input_label], axis=1)
+        z_cond = tf.concat([z, input_label], axis=3)
         return z_cond
 
     @tf.function
