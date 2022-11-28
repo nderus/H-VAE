@@ -333,19 +333,11 @@ def decoder2(encoded_dim, category_count, second_dim, second_depth):
     model = keras.Model(u_cond, z_hat, name='decoder2')
     return model
 #
-def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
+def decoder_filters(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
 
-    decoder_inputs = layers.Input(shape=(encoded_dim + label_size,),
+    decoder_inputs = layers.Input(shape=(24, 24, 5), # hard coded
                                  name='decoder_input')
-    x = layers.Dense(encoded_dim)
-
-    x = layers.Dense(encoded_dim * 2 )
  
-    x = layers.Dense(input_shape[0]/2 * input_shape[1]/2 * 64)(decoder_inputs)
-   
-    x = layers.Reshape(target_shape=(int(input_shape[0]/2),
-                     int(input_shape[1]/2), 64))(x)
-    x = bn_relu(x) 
     x = layers.Conv2DTranspose(64, (3, 3),
                       padding='same',
                       name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
