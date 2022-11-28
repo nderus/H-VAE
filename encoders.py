@@ -429,8 +429,8 @@ def encoder_filters( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, 
                 name='block3_conv2', kernel_regularizer=regularizer)(x)    
     x = bn_relu(x)            
 
-    mu = layers.Conv2D(128, name='mu')(x)
-    log_var = layers.Conv2D(128, name='log_var')(x)
+    mu = layers.Conv2D(128, (3, 3), kernel_size = 1, use_bias = False, name='mu')(x)
+    log_var = layers.Conv2D(128, (3, 3), kernel_size = 1, use_bias = False, name='log_var')(x)
     
 
     model = keras.Model(inputs, [mu, log_var], name='encoder')
