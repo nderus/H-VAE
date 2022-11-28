@@ -340,7 +340,7 @@ def decoder_filters(input_shape, label_size=10, encoded_dim = 2, final_stride = 
  
     x = layers.Conv2DTranspose(64, (3, 3),
                       padding='same',
-                      name='up_block4_conv1', kernel_regularizer=regularizer)(x) #regularizers.L2(.001)
+                      name='up_block4_conv1', kernel_regularizer=regularizer)(decoder_inputs) #regularizers.L2(.001)
     x = layers.Conv2DTranspose(64, (3, 3),
                     padding='same',
                     name='up_block4_conv2',  kernel_regularizer=regularizer)(x)  
