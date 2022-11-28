@@ -395,3 +395,44 @@ def unet_encoder( widths, block_depth, input_shape = (28, 28, 1),  label_size=2,
     log_var = layers.Dense(encoded_dim, name='log_var')(y)
 
     return keras.Model(inputs, [mu, log_var], name="unet_encoder")
+
+def encoder_filters( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, regularizer = regularizers.L2(.001)):   
+
+    inputs = layers.Input(shape=(input_shape[0],
+                input_shape[1], input_shape[2] + label_size), dtype='float32',
+                name='Input')
+
+    x = layers.Conv2D(16, (3, 3),
+                      padding='same',
+                      name='block1_conv1', kernel_regularizer=regularizer)(inputs)
+    x = layers.Conv2D(16, (3, 3),
+                      padding='same',
+                      name='block1_conv2', kernel_regularizer=regularizer)(x)
+    x = bn_relu(x)
+    # block 2
+    x = layers.Conv2D(32, (3, 3),
+                      padding='same',
+                      name='block2_conv1', kernel_regularizer=regularizer)(x)
+    x = layers.Conv2D(32, (3, 3),
+                      padding='same',
+                      name='block2_conv2', kernel_regularizer=regularizer)(x)
+
+    x = bn_relu(x)
+    x = layers.MaxPool2D(pool_size=2, strides=2,name='S4')(x)
+
+    # block 3
+    x = layers.Conv2D(64, (3, 3),
+                      padding='same',
+                      name='block3_conv1', kernel_regularizer=regularizer)(x)
+    x = layers.Conv2D(64, (3, 3),
+                padding='same',
+                name='block3_conv2', kernel_regularizer=regularizer)(x)    
+    x = bn_relu(x)            
+
+    mu = layers.Conv2D(128, name='mu')(x)
+    log_var = layers.Conv2D(128, name='log_var')(x)
+    
+
+    model = keras.Model(inputs, [mu, log_var], name='encoder')
+    
+    return model
