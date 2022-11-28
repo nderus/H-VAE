@@ -423,7 +423,7 @@ class CVAE_filters(keras.Model):
     def sampling(self, z_mean, z_log_var, input_label):
         if len(input_label.shape) == 1:
             input_label = np.expand_dims(input_label, axis=0)
-
+        print(tf.shape(z_log_var))
         eps = tf.random.normal(tf.shape(z_log_var), dtype=tf.float32,
                                mean=0., stddev=1.0, name='epsilon')
         z = z_mean + tf.exp(z_log_var / 2) * eps
