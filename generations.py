@@ -51,6 +51,7 @@ class Generations:
             wandb.log({"Generations 2nd stage": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) })
         else:
             wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
+            
 
     def generations_celeba(self, target_attr, batch_size = 100):
         image_count = 10
@@ -139,4 +140,47 @@ def plot_generated_images(generated_images, nrows, ncols, digit_label,
   wandb.log({"Latent_interpolation": wandb.Image(plt, caption="Class:{}".format( digit_label)) }) #
 
   plt.show()
+
+ class Generation_filters:
+    
+    def __init__(self, model, encoded_dim, category_count, input_shape, labels, model2 = None, second_stage = False):
+        self.model = model
+        self.encoded_dim = encoded_dim
+        self.category_count = category_count
+        self.input_shape = input_shape
+        self.labels = labels
+        self.model2 = model2
+    
+    
+    def generations_class(self, digit_label=1, image_count = 10):
+        _, axs = plt.subplots(2, image_count, figsize=(20, 4))
+        for i in range(image_count):
+            digit_label_one_hot = to_categorical(digit_label, self.category_count).reshape(1,-1)
+            a = tf.convert_to_tensor(digit_label_one_hot)
+            b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
+            z_cond = self.sampling(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
+            if self.second_stage:
+                z_cond = self.model2.posterior(z_cond, b)
+            decoded_x = self.model.decoder.predict(z_cond)
+            digit_0 = decoded_x[0].reshape(self.input_shape) 
+            digit_1 = decoded_x[1].reshape(self.input_shape) 
+            axs[0, i].imshow(digit_0)
+            axs[0, i].axis('off')
+            if len(self.labels) <= 10:
+                axs[0, i].set_title(self.labels[digit_label])
+            axs[1, i].imshow(digit_1)
+            axs[1, i].axis('off')
+            if len(self.labels) <= 10:
+                axs[1, i].set_title(self.labels[digit_label])
+                
+     def __call__(self):
+
+        if (self.category_count <= 10):
+            for i in range(self.category_count):
+                self.generations_class(i)
+
+        else:
+            print('generations for celeba beta')
+            self.generations_celeba( [0, 8, 20])
+            self.generations_celeba([2, 9, 12, 21, 26, 27, 31, 39])
 
