@@ -150,7 +150,21 @@ class Generations_filters:
         self.input_shape = input_shape
         self.labels = labels
         self.model2 = model2
+        
     
+    def sampling(self, z_mean, z_log_var, input_label):
+        if len(input_label.shape) == 1:
+            input_label = np.expand_dims(input_label, axis=0)
+        eps = tf.random.normal(tf.shape(z_log_var), dtype=tf.float32,
+                               mean=0., stddev=1.0, name='epsilon')
+        z = z_mean + tf.exp(z_log_var / 2) * eps
+        image_size = [tf.shape(z_log_var)[1], tf.shape(z_log_var)[2], tf.shape(z_log_var)[3]]
+        labels = tf.reshape(input_label, [-1, 1, 1, self.category_count])
+        labels = tf.cast(labels, dtype='float32')
+        ones = tf.ones([tf.shape(z_log_var)[0]] + image_size[0:-1] + [self.category_count])
+        input_label = ones * labels
+        z_cond = tf.concat([z, input_label], axis=3)
+        return z_cond
     
     def generations_class(self, digit_label=1, image_count = 10):
         _, axs = plt.subplots(2, image_count, figsize=(20, 4))
@@ -158,7 +172,7 @@ class Generations_filters:
             digit_label_one_hot = to_categorical(digit_label, self.category_count).reshape(1,-1)
             a = tf.convert_to_tensor(digit_label_one_hot)
             b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
-            z_cond = cvae.sampling(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
+            z_cond = self.sampling(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
             if self.second_stage:
                 z_cond = self.model2.posterior(z_cond, b)
             decoded_x = self.model.decoder.predict(z_cond)
