@@ -158,10 +158,10 @@ class Generations_filters:
         eps = tf.random.normal(tf.shape(z_log_var), dtype=tf.float32,
                                mean=0., stddev=1.0, name='epsilon')
         z = z_mean + tf.exp(z_log_var / 2) * eps
-        image_size = [24, 24, 3]
+        image_size = [tf.shape(z_log_var)[1], tf.shape(z_log_var)[2], tf.shape(z_log_var)[3]]
         labels = tf.reshape(input_label, [-1, 1, 1, self.category_count])
         labels = tf.cast(labels, dtype='float32')
-        ones = tf.ones([2] + image_size[0:-1] + [self.category_count]) #2 batch size
+        ones = tf.ones([tf.shape(z_log_var)[0]] + image_size[0:-1] + [self.category_count])
         input_label = ones * labels
         z_cond = tf.concat([z, input_label], axis=3)
         return z_cond
