@@ -158,7 +158,7 @@ class Generations_filters:
             digit_label_one_hot = to_categorical(digit_label, self.category_count).reshape(1,-1)
             a = tf.convert_to_tensor(digit_label_one_hot)
             b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
-            z_cond = self.sampling(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
+            z_cond = cvae.sampling(z_mean=0, z_log_var=0, input_label = b) # TO DO: sub this with the sampling CVAE function
             if self.second_stage:
                 z_cond = self.model2.posterior(z_cond, b)
             decoded_x = self.model.decoder.predict(z_cond)
