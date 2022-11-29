@@ -141,7 +141,7 @@ def plot_generated_images(generated_images, nrows, ncols, digit_label,
 
   plt.show()
 
- class Generation_filters:
+class Generation_filters:
     
     def __init__(self, model, encoded_dim, category_count, input_shape, labels, model2 = None, second_stage = False):
         self.model = model
