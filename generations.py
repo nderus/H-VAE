@@ -173,8 +173,6 @@ class Generations_filters:
             a = tf.convert_to_tensor(digit_label_one_hot)
             b = tf.concat([a, a], axis=0) # with 1 dimension, it fails...
             z_cond = self.sampling(z_mean=tf.zeros([2, 24, 24, 3]), z_log_var=tf.zeros([2, 24, 24, 3]), input_label = b) # TO DO: sub this with the sampling CVAE function
-            if self.second_stage:
-                z_cond = self.model2.posterior(z_cond, b)
             decoded_x = self.model.decoder.predict(z_cond)
             digit_0 = decoded_x[0].reshape(self.input_shape) 
             digit_1 = decoded_x[1].reshape(self.input_shape) 
