@@ -451,7 +451,7 @@ class CVAE_filters(keras.Model):
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean)
                       - tf.exp(z_log_var))
 
-            kl_loss = tf.reduce_sum(kl_loss, axis=(1, 2)) 
+            kl_loss = tf.reduce_sum(kl_loss, axis=(1, 2, 3)) 
             total_loss_no_weights = reconstruction_loss + kl_loss
             total_loss_no_weights = tf.reduce_mean(total_loss_no_weights)
             kl_loss = self.beta * kl_loss
