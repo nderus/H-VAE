@@ -184,7 +184,8 @@ class Generations_filters:
             axs[1, i].axis('off')
             if len(self.labels) <= 10:
                 axs[1, i].set_title(self.labels[digit_label])
-                
+            wandb.log({"Generations": wandb.Image(plt, caption="Class:{}_{}".format(digit_label, self.labels[digit_label])) }) #
+
     def __call__(self):
 
         if (self.category_count <= 10):
