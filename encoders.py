@@ -257,7 +257,8 @@ class EncoderMixNet(keras.Model):
         self.layer4 = keras.Sequential([
             resblock(64, downsample=True) for _ in range(repeat[0])
         ], name='layer4')
-
+        
+        self.attention = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=2, attention_axes=(2, 3))  #ATTENTION added
         self.flat = layers.Flatten(name = 'flatten')
         self.bottleneck = layers.Dense(encoded_dim * 2, name='encoder_bottleneck')
         self.mu = layers.Dense(encoded_dim, name='mu')
@@ -270,7 +271,8 @@ class EncoderMixNet(keras.Model):
         input = self.layer2(input)
         input = self.layer3(input)
         input = self.layer4(input)
-        input = self.flat(input)
+        attention = self.attention(input, input) #added
+        input = self.flat(attention)
         input = self.bottleneck(input)
         mu = self.mu(input)
         log_var = self.log_var(input)
