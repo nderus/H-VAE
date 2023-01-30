@@ -26,6 +26,7 @@ Please refer to the scripts provided in the table corresponding to some inferenc
 |                   Sample from DiffuseVAE                  	|     `scripts/test_ddpm.sh`    	|
 |          Generate reconstructions from DiffuseVAE         	| `scripts/test_recons_ddpm.sh` 	|
 | Interpolate in the VAE/DDPM latent space using DiffuseVAE 	|    `scripts/interpolate.sh`   	|
-Training
 
-Generation
+---
+
+Since our model uses diffusion models please consider citing the original [DiffuseVAE](https://arxiv.org/abs/2201.00308) [Diffusion model](https://arxiv.org/abs/1503.03585), [DDPM](https://arxiv.org/abs/2006.11239) and [VAE](https://arxiv.org/abs/1312.6114) papers.
