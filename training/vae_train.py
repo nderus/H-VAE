@@ -7,6 +7,16 @@ from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
 from training.vae_train_utils import args_to_dict
 from training.vae_train_utils import str2bool
+
+from encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
+from decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
+from datasets import data_loader
+from embeddings import embedding
+from reconstructions import reconstructions
+from generations import Generations
+from activations import VisualizeActivations
+from gradcam import GradCam
+from src.CVAE import CVAE
 from datasets import data_loader
 
 def main():
@@ -36,6 +46,34 @@ def main():
   train_x_mean, train_log_var = cvae.encoder.predict(train_input)
   test_x_mean, test_log_var = cvae.encoder.predict(test_input)
   val_x_mean, val_log_var = cvae.encoder.predict(val_input)
+  
+  if args.embeddings:
+    embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, 
+              train_log_var, test_log_var, val_log_var, labels, quantity = 1000, avg_latent=True)
+    
+  if args.reconstructions:
+    reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'train')
+    reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'test')
+    
+  if args.generations:
+    generator = Generations(cvae, encoded_dim, category_count, input_shape, labels)
+    generator()
+   
+  if args.gradcam:
+    if 'resnet' in model_name:
+      target_layer = "layer4"
+    else:
+      target_layer = "block3_conv2"
+    gc = GradCam(cvae, test_x, test_y_one_hot, HQ = False, target_layer = target_layer)
+    gc.gradcam()
+    
+  if args.gradcamHQ:
+  if 'resnet' in model_name:
+    target_layer = "layer4"
+  else:
+    target_layer = "block3_conv2"
+  gc = GradCam(cvae, test_x, test_y_one_hot, HQ = True, target_layer = target_layer)
+  gc.gradcam()
   
 def create_argparser():
     defaults = dict(
