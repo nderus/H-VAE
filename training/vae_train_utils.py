@@ -14,6 +14,13 @@ def vae_defaults():
         batch_size = 100,
         patience = 10,
         wandb_logging = False,
+        embeddings = False,
+        reconstructions = False,
+        generations = False,
+        activations = False,
+        gradcam = False,
+        gradcamHQ = False,
+        
     )
 
 def add_dict_to_argparser(parser, default_dict):
