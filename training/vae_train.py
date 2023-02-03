@@ -7,12 +7,14 @@ from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
 from training.vae_train_utils import args_to_dict
 from training.vae_train_utils import str2bool
-
+from datasets import data_loader
 
 def main():
   
   args = create_argparser().parse_args()
-  args_to_dict(args, vae_defaults().keys())
+  #args = args_to_dict(args, vae_defaults().keys())
+
+  data = data_loader(name = args.dataset_name, root_folder='/content/')
   
 def create_argparser():
     defaults = dict(
