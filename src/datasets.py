@@ -13,8 +13,6 @@ from glob import glob
 
 # TO DO: same method for loading, maybe TFRecord datasets
 
-
-
 def data_loader(name, root_folder):
     """
     For a dataset, load training, test and validation set, along with info

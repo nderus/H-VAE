@@ -1,7 +1,15 @@
 """
 Train a VAE model on images.
 """
+import os
 import argparse
+from tensorflow import keras
+import tensorflow as tf
+from tensorflow.keras import backend
+from tensorflow.keras import regularizers
+import wandb
+from wandb.keras import WandbCallback
+
 
 from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
@@ -22,21 +30,54 @@ from src.datasets import data_loader
 def main():
   
   args = create_argparser().parse_args()
-  #args to dict -> make a dict to feed into a function i.e. make_model()
-  #args = args_to_dict(args, vae_defaults().keys())
 
   data = data_loader(name = args.dataset_name, root_folder='/content/')
-  
+
+  # (TO DO: wandb wrapper)
+  wandb.init(project = args.dataset_name, entity="nrderus",
+    config = {
+    "dataset": args.dataset_name,
+    "model": args.model_name,
+    "encoded_dim": args.encoded_dim,
+    "kl_coefficient": args.kl_coefficient,
+    "learning_rate": args.learning_rate,
+    "epochs": args.epoch_count,
+    "batch_size": args.batch_size,
+    "patience": args.patience,
+})
   # (TO DO: function load model)
-  early_stop = keras.callbacks.EarlyStopping(monitor='val_loss',
-             patience=patience, restore_best_weights=False)
+  #cvae = create_model(**args_to_dict(args, vae_defaults().keys()))
+  
+  if 'resnet' in args.model_name:
+      encoder = EncoderMixNet18(encoded_dim = args.encoded_dim)
+      encoder = encoder.model(input_shape=(args.input_shape[0], args.input_shape[1], args.input_shape[2] + args.category_count))
+  else:
+      encoder = encoderCNN(args.input_shape, args.category_count, args.encoded_dim,  regularizer=regularizers.L2(.001))
+  
+  if 'resnet' in args.model_name:
+      # decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 2)
+      # decoder = decoder.model(input_shape=(encoded_dim + category_count,))
+      decoder = decoderCNN(args.input_shape, args.category_count, args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
+
+  else:
+      decoder = decoderCNN(args.input_shape, args.category_count, args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
+  
+  cvae = CVAE(encoder, decoder, args.kl_coefficient, args.input_shape, args.category_count)
+  cvae.built = True
+  cvae_input = cvae.encoder.input[0]
+  cvae_output = cvae.decoder.output
+  mu = cvae.encoder.get_layer('mu').output
+  log_var = cvae.encoder.get_layer('log_var').output
+
+  early_stop = keras.callbacks.EarlyStopping(monitor = 'val_loss',
+             patience = args.patience, restore_best_weights = False)
 
   # (TO DO: function fit model)
   #NB: save_weights_only -> ValueError: Unable to create dataset (name a
   history = cvae.fit([train_x, train_y_one_hot],
                    validation_data = ([val_x, val_y_one_hot],None),
-                   epochs = epoch_count,
-                   batch_size = batch_size,
+                   epochs = args.epoch_count,
+                   batch_size = args.batch_size,
                    callbacks=[early_stop, WandbCallback(save_model = False) ]) 
   
   _, input_label_train, train_input = cvae.conditional_input([train_x[:1000], train_y_one_hot[:1000]])
@@ -48,7 +89,7 @@ def main():
   val_x_mean, val_log_var = cvae.encoder.predict(val_input)
   
   if args.embeddings:
-    embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, 
+    embedding(args.encoded_dim, args.category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, 
               train_log_var, test_log_var, val_log_var, labels, quantity = 1000, avg_latent=True)
     
   if args.reconstructions:
@@ -60,13 +101,13 @@ def main():
     activations_encoder()
     activations_decoder = VisualizeActivations(cvae, cvae.decoder, test_x, test_y_one_hot)
     activations_decoder()
-    
+
   if args.generations:
-    generator = Generations(cvae, encoded_dim, category_count, input_shape, labels)
+    generator = Generations(cvae, args.encoded_dim, args.category_count, args.input_shape, args.labels)
     generator()
    
   if args.gradcam:
-    if 'resnet' in model_name:
+    if 'resnet' in args.model_name:
       target_layer = "layer4"
     else:
       target_layer = "block3_conv2"
@@ -74,12 +115,12 @@ def main():
     gc.gradcam()
     
   if args.gradcamHQ:
-  if 'resnet' in model_name:
-    target_layer = "layer4"
-  else:
-    target_layer = "block3_conv2"
-  gc = GradCam(cvae, test_x, test_y_one_hot, HQ = True, target_layer = target_layer)
-  gc.gradcam()
+    if 'resnet' in args.model_name:
+      target_layer = "layer4"
+    else:
+      target_layer = "block3_conv2"
+    gc = GradCam(cvae, test_x, test_y_one_hot, HQ = True, target_layer = target_layer)
+    gc.gradcam()
   
 def create_argparser():
     defaults = dict(
