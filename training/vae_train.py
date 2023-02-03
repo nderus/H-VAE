@@ -10,14 +10,14 @@ from training.vae_train_utils import str2bool
 
 from src.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
 from src.decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
-from datasets import data_loader
+from src.datasets import data_loader
 from src.embeddings import embedding
 from src.reconstructions import reconstructions
 from src.generations import Generations
-from activations import VisualizeActivations
+from src.activations import VisualizeActivations
 from src.gradcam import GradCam
 from src.CVAE import CVAE
-from datasets import data_loader
+from src.datasets import data_loader
 
 def main():
   
