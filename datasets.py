@@ -155,10 +155,19 @@ def data_loader(name, root_folder):
     else:
         raise Exception('No such dataset called {}.'.format(name))
 
-    res = (resize(train_x), resize(test_x), resize(val_x),
-         train_y, test_y, val_y, train_y_one_hot, test_y_one_hot, val_y_one_hot,
-        input_shape, category_count, labels)
-    return res
+    return dict(train_x = resize(train_x),
+               test_x = resize(test_x),
+               val_x = resize(val_x),
+               train_y = train_y,
+               test_y = test_y,
+               val_y = val_y,
+               train_y_one_hot = train_y_one_hot,
+               test_y_one_hot = test_y_one_hot,
+               val_y_one_hot = val_y_one_hot,
+               input_shape = input_shape,
+               category_count = category_count,
+               labels = labels
+    )
 
 def get_image_arrays(data, label):
     img_arrays = []
