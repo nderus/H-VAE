@@ -74,32 +74,32 @@ def main():
 
   # (TO DO: function fit model)
   #NB: save_weights_only -> ValueError: Unable to create dataset (name a
-  history = cvae.fit([train_x, train_y_one_hot],
-                   validation_data = ([val_x, val_y_one_hot],None),
+  history = cvae.fit([data['train_x'], data['train_y_one_hot']],
+                   validation_data = ([data['val_x'], data['val_y_one_hot']],None),
                    epochs = args.epoch_count,
                    batch_size = args.batch_size,
                    callbacks=[early_stop, WandbCallback(save_model = False) ]) 
   
-  _, input_label_train, train_input = cvae.conditional_input([train_x[:1000], train_y_one_hot[:1000]])
-  _, input_label_test, test_input = cvae.conditional_input([test_x[:1000], test_y_one_hot[:1000]])
-  _, input_label_val, val_input = cvae.conditional_input([val_x[:1000], val_y_one_hot[:1000]])
+  _, input_label_train, train_input = cvae.conditional_input([data['train_x'][:1000], data['train_y_one_hot'][:1000]])
+  _, input_label_test, test_input = cvae.conditional_input([data['test_x'][:1000], data['test_y_one_hot'][:1000]])
+  _, input_label_val, val_input = cvae.conditional_input([data['val_x'][:1000], data['val_y_one_hot'][:1000]])
 
   train_x_mean, train_log_var = cvae.encoder.predict(train_input)
   test_x_mean, test_log_var = cvae.encoder.predict(test_input)
   val_x_mean, val_log_var = cvae.encoder.predict(val_input)
   
   if args.embeddings:
-    embedding(args.encoded_dim, args.category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y, 
-              train_log_var, test_log_var, val_log_var, labels, quantity = 1000, avg_latent=True)
+    embedding(args.encoded_dim, args.category_count, train_x_mean, test_x_mean, val_x_mean, data['train_y'], data['test_y'], data['val_y'], 
+              train_log_var, test_log_var, val_log_var, data['labels'], quantity = 1000, avg_latent=True)
     
   if args.reconstructions:
-    reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'train')
-    reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'test')
+    reconstructions(cvae, data['train_x'], data['train_y'], train_x_mean, train_log_var, input_label_train, data['labels'], set = 'train')
+    reconstructions(cvae, data['train_x'], data['train_y'], train_x_mean, train_log_var, input_label_train, data['labels'], set = 'test')
 
   if args.activations:
-    activations_encoder = VisualizeActivations(cvae, cvae.encoder, test_x, test_y_one_hot)
+    activations_encoder = VisualizeActivations(cvae, cvae.encoder, data['test_x'], data['test_y_one_hot'])
     activations_encoder()
-    activations_decoder = VisualizeActivations(cvae, cvae.decoder, test_x, test_y_one_hot)
+    activations_decoder = VisualizeActivations(cvae, cvae.decoder, data['test_x'], data['test_y_one_hot'])
     activations_decoder()
 
   if args.generations:
@@ -111,7 +111,7 @@ def main():
       target_layer = "layer4"
     else:
       target_layer = "block3_conv2"
-    gc = GradCam(cvae, test_x, test_y_one_hot, HQ = False, target_layer = target_layer)
+    gc = GradCam(cvae, data['test_x'], data['test_y_one_hot'], HQ = False, target_layer = target_layer)
     gc.gradcam()
     
   if args.gradcamHQ:
@@ -119,7 +119,7 @@ def main():
       target_layer = "layer4"
     else:
       target_layer = "block3_conv2"
-    gc = GradCam(cvae, test_x, test_y_one_hot, HQ = True, target_layer = target_layer)
+    gc = GradCam(cvae, data['test_x'], data['test_y_one_hot'], HQ = True, target_layer = target_layer)
     gc.gradcam()
   
 def create_argparser():
