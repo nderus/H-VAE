@@ -54,6 +54,12 @@ def main():
   if args.reconstructions:
     reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'train')
     reconstructions(cvae, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, set = 'test')
+
+  if args.activations:
+    activations_encoder = VisualizeActivations(cvae, cvae.encoder, test_x, test_y_one_hot)
+    activations_encoder()
+    activations_decoder = VisualizeActivations(cvae, cvae.decoder, test_x, test_y_one_hot)
+    activations_decoder()
     
   if args.generations:
     generator = Generations(cvae, encoded_dim, category_count, input_shape, labels)
