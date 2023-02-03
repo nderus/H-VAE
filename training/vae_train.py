@@ -8,14 +8,14 @@ from training.vae_train_utils import add_dict_to_argparser
 from training.vae_train_utils import args_to_dict
 from training.vae_train_utils import str2bool
 
-from encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
-from decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
+from src.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
+from src.decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
 from datasets import data_loader
-from embeddings import embedding
-from reconstructions import reconstructions
-from generations import Generations
+from src.embeddings import embedding
+from src.reconstructions import reconstructions
+from src.generations import Generations
 from activations import VisualizeActivations
-from gradcam import GradCam
+from src.gradcam import GradCam
 from src.CVAE import CVAE
 from datasets import data_loader
 
