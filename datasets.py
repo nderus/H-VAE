@@ -2,6 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import random
+import tensorflow as tf
+import tensorflow_datasets as tfds
 import cv2
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
@@ -14,18 +16,23 @@ from glob import glob
 
 
 def data_loader(name, root_folder):
-
+    """
+    For a dataset, load training, test and validation set, along with info
+    regarding the shape of the images and the number of categories.
+    :param name: the name of the dataset
+    :param root folder: a dataset directory.
+    """
     if name.lower() == 'mnist':
         category_count = 10
         (train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
                         test_size = 10000, shuffle=False, random_state=11)
-        train_x=np.expand_dims(train_x,axis=3)
-        val_x=np.expand_dims(val_x,axis=3)
-        test_x=np.expand_dims(test_x,axis=3)
-        train_y_one_hot = to_categorical(train_y,category_count)
-        val_y_one_hot = to_categorical(val_y,category_count)
-        test_y_one_hot=to_categorical(test_y,category_count)
+        train_x = np.expand_dims(train_x, axis=3)
+        val_x = np.expand_dims(val_x, axis=3)
+        test_x = np.expand_dims(test_x, axis=3)
+        train_y_one_hot = to_categorical(train_y, category_count)
+        val_y_one_hot = to_categorical(val_y, category_count)
+        test_y_one_hot = to_categorical(test_y, category_count)
         input_shape = (28, 28, 1)
         labels = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
 
@@ -34,12 +41,12 @@ def data_loader(name, root_folder):
         (train_x, train_y), (test_x, test_y) = keras.datasets.fashion_mnist.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
                 test_size = 10000, shuffle=False, random_state=11)
-        train_x=np.expand_dims(train_x,axis=3)
-        val_x=np.expand_dims(val_x,axis=3)
-        test_x=np.expand_dims(test_x,axis=3)
-        train_y_one_hot = to_categorical(train_y,category_count)
-        val_y_one_hot = to_categorical(val_y,category_count)
-        test_y_one_hot = to_categorical(test_y,category_count)
+        train_x = np.expand_dims(train_x, axis=3)
+        val_x = np.expand_dims(val_x, axis=3)
+        test_x = np.expand_dims(test_x, axis=3)
+        train_y_one_hot = to_categorical(train_y, category_count)
+        val_y_one_hot = to_categorical(val_y, category_count)
+        test_y_one_hot = to_categorical(test_y, category_count)
         input_shape = (28, 28, 1)
 
         labels = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"]
@@ -49,9 +56,9 @@ def data_loader(name, root_folder):
         (train_x, train_y), (test_x, test_y) = keras.datasets.cifar10.load_data()
         train_x, val_x, train_y, val_y = train_test_split(train_x, train_y,
                 test_size = 10000, shuffle=False, random_state=11)
-        train_y_one_hot = to_categorical(train_y,category_count)
-        val_y_one_hot = to_categorical(val_y,category_count)
-        test_y_one_hot = to_categorical(test_y,category_count)
+        train_y_one_hot = to_categorical(train_y, category_count)
+        val_y_one_hot = to_categorical(val_y, category_count)
+        test_y_one_hot = to_categorical(test_y, category_count)
         input_shape = (32, 32, 3)
         labels = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 
@@ -125,8 +132,7 @@ def data_loader(name, root_folder):
         labels = ['non-cancer','cancer']
     
     elif name.lower() == 'experimental':
-        import tensorflow_datasets as tfds
-        import tensorflow as tf
+  
         (train_ds, val_ds), info = tfds.load("histo", split=[ "cancer[:30000] + non-cancer[:30000]", "cancer[30000:40000] + non-cancer[30000:40000]"], as_supervised=True, shuffle_files=False, with_info=True)
 
         train_ds = train_ds.map(
@@ -149,10 +155,10 @@ def data_loader(name, root_folder):
     else:
         raise Exception('No such dataset called {}.'.format(name))
 
-    return resize(train_x), resize(test_x), resize(val_x), train_y, test_y, val_y, train_y_one_hot, test_y_one_hot, val_y_one_hot, input_shape, category_count, labels
-
-
-
+    res = (resize(train_x), resize(test_x), resize(val_x),
+         train_y, test_y, val_y, train_y_one_hot, test_y_one_hot, val_y_one_hot,
+        input_shape, category_count, labels)
+    return res
 
 def get_image_arrays(data, label):
     img_arrays = []
@@ -164,12 +170,9 @@ def get_image_arrays(data, label):
             img_arrays.append([img_sized, label]) 
     return img_arrays
 
-
 def resize(data):
     data = data / 255.0
     return(data)
 
-
 def normalize_img(image, label):
-    import tensorflow as tf
     return tf.cast(image, tf.float32) / 255., label

@@ -6,6 +6,7 @@ import argparse
 from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
 from training.vae_train_utils import args_to_dict
+from training.vae_train_utils import str2bool
 
 
 def main():
@@ -32,3 +33,4 @@ def create_argparser():
 
 if __name__ == "__main__":
   main()
+
