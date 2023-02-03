@@ -22,3 +22,6 @@ def add_dict_to_argparser(parser, default_dict):
         elif isinstance(v, bool):
             v_type = str2bool
         parser.add_argument(f"--{k}", default=v, type=v_type)
+
+def args_to_dict(args, keys):
+    return {k: getattr(args, k) for k in keys}
