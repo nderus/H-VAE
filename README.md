@@ -1,8 +1,8 @@
 # Synthetic Data Generation of histopathological images
-This repository contains the implementation for the work "SYNTHETIC DATA GENERATION OF HISTOPATHOLOGICAL IMAGES" presented at the XXII International Conference on Mechanics in Medicine and Biology, in Bologna (2022).
-The data set used in the study is publicly available for download at: https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images. In order to launch the training scripts, it is assumed that the data is available in the directory: 'datasets/breast-histopathology/IDC_regular_ps50_idx5'.
-
+This repository contains the implementation for the work "SYNTHETIC DATA GENERATION OF HISTOPATHOLOGICAL IMAGES" presented at the XXII International Conference on Mechanics in Medicine and Biology, in Bologna (2022).<br />
+The data set used in the study is publicly available for download at: https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images. In order to launch the training scripts, it is assumed that the data is available in the directory: 'datasets/breast-histopathology/IDC_regular_ps50_idx5'.<br />
 The data set in tfds format is available here: https://drive.google.com/drive/folders/1UHCs9GCNUZzjSxcdjXc3gp-QpniFfVGd?usp=sharing
+
 ---
 ## Overview
 ## Training
