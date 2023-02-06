@@ -45,6 +45,7 @@ def main():
                            kid_diffusion_steps = args.kid_diffusion_steps, 
                            plot_diffusion_steps = args.plot_diffusion_steps,
                            kid_image_size = args.kid_image_size)
+    
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=args.learning_rate,
