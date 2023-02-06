@@ -1,23 +1,9 @@
+import math
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
 import matplotlib.pyplot as plt
 from training.ddpm_train_utils import KID
-
-def sinusoidal_embedding(x):
-    embedding_min_frequency = 1.0
-    frequencies = tf.exp(
-        tf.linspace(
-            tf.math.log(embedding_min_frequency),
-            tf.math.log(embedding_max_frequency),
-            embedding_dims // 2,
-        )
-    )
-    angular_speeds = 2.0 * math.pi * frequencies
-    embeddings = tf.concat(
-        [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3
-    )
-    return embeddings
 
 def ResidualBlock(width):
     def apply(x):
@@ -58,44 +44,28 @@ def UpBlock(width, block_depth):
 
     return apply
 
-def get_network(image_size, widths, block_depth):
-    noisy_images = keras.Input(shape=(image_size, image_size, 3))
-    noise_variances = keras.Input(shape=(1, 1, 1))
-
-    e = layers.Lambda(sinusoidal_embedding)(noise_variances)
-    e = layers.UpSampling2D(size=image_size, interpolation="nearest")(e)
-
-    x = layers.Conv2D(widths[0], kernel_size=1)(noisy_images)
-    x = layers.Concatenate()([x, e])
-
-    skips = []
-    for width in widths[:-1]:
-        x = DownBlock(width, block_depth)([x, skips])
-
-    for _ in range(block_depth):
-        x = ResidualBlock(widths[-1])(x)
-
-    for width in reversed(widths[:-1]):
-        x = UpBlock(width, block_depth)([x, skips])
-
-    x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(x)
-
-    return keras.Model([noisy_images, noise_variances], x, name="residual_unet")
-
 class DiffusionModel(keras.Model):
-    def __init__(self, image_size, widths, block_depth):
+    def __init__(self, image_size, widths, block_depth, embedding_max_frequency, embedding_dims, batch_size, min_signal_rate, max_signal_rate, ema, kid_diffusion_steps, plot_diffusion_steps, kid_image_size):
         super().__init__()
-
         self.normalizer = layers.Normalization()
-        self.network = get_network(image_size, widths, block_depth)
+        self.network = self.get_network(image_size, widths, block_depth)
+        self.embedding_max_frequency = embedding_max_frequency
+        self.embedding_dims = embedding_dims
         self.ema_network = keras.models.clone_model(self.network)
+        self.image_size = image_size
+        self.batch_size = batch_size
+        self.min_signal_rate = min_signal_rate
+        self.max_signal_rate = max_signal_rate
+        self.ema = ema
+        self.kid_diffusion_steps = kid_diffusion_steps
+        self.plot_diffusion_steps = plot_diffusion_steps
+        self.kid_image_size = kid_image_size
 
     def compile(self, **kwargs):
         super().compile(**kwargs)
-
         self.noise_loss_tracker = keras.metrics.Mean(name="n_loss")
         self.image_loss_tracker = keras.metrics.Mean(name="i_loss")
-        self.kid = KID(name="kid")
+        self.kid = KID(name="kid", image_size=self.image_size, kid_image_size=self.kid_image_size)
 
     @property
     def metrics(self):
@@ -105,11 +75,50 @@ class DiffusionModel(keras.Model):
         # convert the pixel values back to 0-1 range
         images = self.normalizer.mean + images * self.normalizer.variance**0.5
         return tf.clip_by_value(images, 0.0, 1.0)
+    
+
+    def sinusoidal_embedding(self, x):
+        embedding_min_frequency = 1.0
+        frequencies = tf.exp(
+            tf.linspace(
+                tf.math.log(embedding_min_frequency),
+                tf.math.log(self.embedding_max_frequency),
+                self.embedding_dims // 2,
+            )
+        )
+        angular_speeds = 2.0 * math.pi * frequencies
+        embeddings = tf.concat(
+            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3 )
+        return embeddings
+    
+    def get_network(self, image_size, widths, block_depth):
+        noisy_images = keras.Input(shape=(image_size, image_size, 3))
+        noise_variances = keras.Input(shape=(1, 1, 1))
+
+        e = layers.Lambda(self.sinusoidal_embedding)(noise_variances)
+        e = layers.UpSampling2D(size=image_size, interpolation="nearest")(e)
+
+        x = layers.Conv2D(widths[0], kernel_size=1)(noisy_images)
+        x = layers.Concatenate()([x, e])
+
+        skips = []
+        for width in widths[:-1]:
+            x = DownBlock(width, block_depth)([x, skips])
+
+        for _ in range(block_depth):
+            x = ResidualBlock(widths[-1])(x)
+
+        for width in reversed(widths[:-1]):
+            x = UpBlock(width, block_depth)([x, skips])
+
+        x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(x)
+
+        return keras.Model([noisy_images, noise_variances], x, name="residual_unet")
 
     def diffusion_schedule(self, diffusion_times):
         # diffusion times -> angles
-        start_angle = tf.acos(max_signal_rate)
-        end_angle = tf.acos(min_signal_rate)
+        start_angle = tf.acos(self.max_signal_rate)
+        end_angle = tf.acos(self.min_signal_rate)
 
         diffusion_angles = start_angle + diffusion_times * (end_angle - start_angle)
 
@@ -167,7 +176,7 @@ class DiffusionModel(keras.Model):
 
     def generate(self, num_images, diffusion_steps):
         # noise -> images -> denormalized images
-        initial_noise = tf.random.normal(shape=(num_images, image_size, image_size, 3))
+        initial_noise = tf.random.normal(shape=(num_images, self.image_size, self.image_size, 3))
         generated_images = self.reverse_diffusion(initial_noise, diffusion_steps)
         generated_images = self.denormalize(generated_images)
         return generated_images
@@ -177,11 +186,11 @@ class DiffusionModel(keras.Model):
             images = images[0]
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=True)
-        noises = tf.random.normal(shape=(batch_size, image_size, image_size, 3))
+        noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
 
         # sample uniform random diffusion times
         diffusion_times = tf.random.uniform(
-            shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
+            shape=(self.batch_size, 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
         # mix the images with noises accordingly
@@ -204,7 +213,7 @@ class DiffusionModel(keras.Model):
 
         # track the exponential moving averages of weights
         for weight, ema_weight in zip(self.network.weights, self.ema_network.weights):
-            ema_weight.assign(ema * ema_weight + (1 - ema) * weight)
+            ema_weight.assign(self.ema * ema_weight + (1 - self.ema) * weight)
 
         # KID is not measured during the training phase for computational efficiency
         return {m.name: m.result() for m in self.metrics[:-1]}
@@ -214,11 +223,11 @@ class DiffusionModel(keras.Model):
           images = images[0]
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=False)
-        noises = tf.random.normal(shape=(batch_size, image_size, image_size, 3))
+        noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
 
         # sample uniform random diffusion times
         diffusion_times = tf.random.uniform(
-            shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
+            shape=(self.batch_size, 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
         # mix the images with noises accordingly
@@ -239,7 +248,7 @@ class DiffusionModel(keras.Model):
         # this is computationally demanding, kid_diffusion_steps has to be small
         images = self.denormalize(images)
         generated_images = self.generate(
-            num_images=batch_size, diffusion_steps=kid_diffusion_steps
+            num_images=self.ema_networkbatch_size, diffusion_steps=self.kid_diffusion_steps
         )
         self.kid.update_state(images, generated_images)
 
@@ -249,7 +258,7 @@ class DiffusionModel(keras.Model):
         # plot random generated images for visual evaluation of generation quality
         generated_images = self.generate(
             num_images=num_rows * num_cols,
-            diffusion_steps=plot_diffusion_steps,
+            diffusion_steps= self.plot_diffusion_steps,
         )
 
         plt.figure(figsize=(num_cols * 2.0, num_rows * 2.0))

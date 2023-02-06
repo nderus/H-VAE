@@ -54,7 +54,7 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError("boolean value expected")
 
-def preprocess_image(data):
+def preprocess_image(data, image_size = 48):
     # center crop image
     
     height = tf.shape(data["image"])[0] 
@@ -67,30 +67,17 @@ def preprocess_image(data):
         crop_size,
         crop_size,
     )
-  
-
     # resize and clip
     # for image downsampling it is important to turn on antialiasing
     image = tf.image.resize(image, size=[image_size, image_size], antialias=True)
     return tf.clip_by_value(image / 255.0, 0.0, 1.0)
 
-def prepare_dataset(split):
-    # the validation dataset is shuffled as well, because data order matters
-    # for the KID estimation
-    return (
-        #tfds.load(dataset_name, split=split, shuffle_files=True)
-        tfds.as_dataframe(builder.as_dataset())
-        .map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-        .cache()
-        .repeat(dataset_repetitions)
-        .shuffle(10 * batch_size)
-        .batch(batch_size, drop_remainder=True)
-        .prefetch(buffer_size=tf.data.AUTOTUNE)
-    )
 
 class KID(keras.metrics.Metric):
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, image_size, kid_image_size, **kwargs):
         super().__init__(name=name, **kwargs)
+        self.image_size = image_size
+        self.kid_image_size = image_size
 
         # KID is estimated per batch and is averaged across batches
         self.kid_tracker = keras.metrics.Mean(name="kid_tracker")
