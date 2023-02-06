@@ -1,7 +1,6 @@
 """
 Train a VAE model on images.
 """
-import os
 import argparse
 from tensorflow import keras
 import tensorflow as tf
