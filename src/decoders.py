@@ -2,6 +2,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
+def bn_relu(inputs):
+    bn = layers.BatchNormalization()(inputs)
+    relu = layers.LeakyReLU(0.2)(bn)
+    return(relu)
 #NB: original had relu and upsample(4)
 class DecoderResBlock(keras.Model):
     def __init__(self, filters, upsample):
@@ -32,7 +36,6 @@ class DecoderResBlock(keras.Model):
 
         input = input + shortcut
         return  layers.LeakyReLU(0.2)(input)
-
 
 class DecoderResNet(keras.Model):
     def __init__(self, resblock, repeat, encoded_dim, final_stride=2):
@@ -160,7 +163,6 @@ class DecoderResNet34(DecoderResNet):
         x = keras.Input(input_shape, name='input')
         return keras.models.Model(x, self.call(x), name='decoder')
 
-
 class DecoderResNet50(DecoderResNet):
     def __init__(self, encoded_dim, final_stride):
         super().__init__(ResBottleneckBlock,  [3, 4, 6, 3], encoded_dim, final_stride)
@@ -171,7 +173,6 @@ class DecoderResNet50(DecoderResNet):
     def model(self, input_shape):
         x = layers.Input(input_shape, name='input', dtype='float32')
         return keras.models.Model(x, self.call(x), name='decoder')
-
 
 def decoderCNN(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, regularizer=None): 
 
@@ -310,12 +311,6 @@ def decoderVGG19(input_shape, label_size=10, encoded_dim = 2, final_stride = 2, 
     model = keras.Model(decoder_inputs, outputs, name='decoder')
     return model
 
-def bn_relu(inputs):
-    bn = layers.BatchNormalization()(inputs)
-    relu = layers.LeakyReLU(0.2)(bn)
-    return(relu)
-
-#
 def decoder2(encoded_dim, category_count, second_dim, second_depth):
 
     u_cond = layers.Input(shape=(encoded_dim + category_count,), dtype='float32',

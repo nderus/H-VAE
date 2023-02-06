@@ -1,10 +1,26 @@
 # generations
 import tensorflow as tf
-
 from tensorflow.keras.utils import to_categorical
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
+
+def plot_generated_images(generated_images, nrows, ncols, digit_label,
+                          no_space_between_plots=False, figsize=(10, 10)):
+  _, axs = plt.subplots(nrows, ncols,figsize=figsize,squeeze=False)
+
+  for i in range(nrows):
+    for j in range(ncols):
+      axs[i,j].axis('off')
+      axs[i,j].imshow(generated_images[i][j], cmap='gray')
+
+  if no_space_between_plots:
+    plt.subplots_adjust(wspace=0,hspace=0)
+  
+  #wandb.log({"Latent_interpolation_class: {}".format(digit_label): wandb.Image(plt)})
+  wandb.log({"Latent_interpolation": wandb.Image(plt, caption="Class:{}".format( digit_label)) }) #
+
+  plt.show()
 
 class Generations:
     def __init__(self, model, encoded_dim, category_count, input_shape, labels, model2 = None, second_stage = False):
@@ -121,25 +137,6 @@ class Generations:
             print('generations for celeba beta')
             self.generations_celeba( [0, 8, 20])
             self.generations_celeba([2, 9, 12, 21, 26, 27, 31, 39])
-
-
-
-def plot_generated_images(generated_images, nrows, ncols, digit_label,
-                          no_space_between_plots=False, figsize=(10, 10)):
-  _, axs = plt.subplots(nrows, ncols,figsize=figsize,squeeze=False)
-
-  for i in range(nrows):
-    for j in range(ncols):
-      axs[i,j].axis('off')
-      axs[i,j].imshow(generated_images[i][j], cmap='gray')
-
-  if no_space_between_plots:
-    plt.subplots_adjust(wspace=0,hspace=0)
-  
-  #wandb.log({"Latent_interpolation_class: {}".format(digit_label): wandb.Image(plt)})
-  wandb.log({"Latent_interpolation": wandb.Image(plt, caption="Class:{}".format( digit_label)) }) #
-
-  plt.show()
 
 class Generations_filters:
     

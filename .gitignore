@@ -137,3 +137,5 @@ cvae_decoder/
 ~/tensorflow_datasets/ 
 ~/
 /~/
+
+/datasets/

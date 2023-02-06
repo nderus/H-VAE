@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import wandb
 import numpy as np
+import tensorflow as tf
+from sklearn import manifold
 from warnings import simplefilter
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -9,8 +11,6 @@ simplefilter(action='ignore', category=FutureWarning)
 
 def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean, train_y, test_y, val_y,
              train_log_var, test_log_var, val_log_var, labels, quantity = 5000, avg_latent=True):
-
-
 
     if encoded_dim == 2:
         plot_2d_data( [train_x_mean[:quantity], test_x_mean[:quantity], val_x_mean[:quantity]],
@@ -22,7 +22,7 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
                       ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     else:
-        from sklearn import manifold
+        
         tsne = manifold.TSNE(n_components = 2, init='pca', random_state=0)
         train_x_tsne = tsne.fit_transform(train_x_mean[:quantity])
         test_x_tsne = tsne.fit_transform(test_x_mean[:quantity])
@@ -36,7 +36,6 @@ def embedding(encoded_dim, category_count, train_x_mean, test_x_mean, val_x_mean
                   ['Train','Test', 'Validation'], (12, 4 * category_count), category_count)
 
     if avg_latent:
-      import tensorflow as tf
       avg_variance_train = tf.reduce_mean(np.exp(train_log_var), axis=0)
       avg_variance_test = tf.reduce_mean(np.exp(test_log_var), axis=0)
       avg_variance_val = tf.reduce_mean(np.exp(val_log_var), axis=0)
@@ -60,16 +59,11 @@ def plot_2d_data(data_2d, y, titles=None, figsize = (7, 7)):
 
     scatter=axs[i].scatter(data_2d[i][:, 0], data_2d[i][:, 1],
                             s = 1,  c = plt.cm.tab10(y[i])) # removed c = y[i], cmap = plt.cm.tab10
-
-
     # axs[i].set_xlim([-xy_lim, xy_lim])
     # axs[i].set_ylim([-xy_lim, xy_lim])
     axs[i].legend(*scatter.legend_elements())
     
   wandb.log({"Embdedding": wandb.Image(plt)})
-
-
-
 
 def plot_2d_data_categorical(data_2d, y, labels, titles=None, figsize = (7, 7), category_count = 10):
   _, axs = plt.subplots(category_count, len(data_2d), figsize = figsize )

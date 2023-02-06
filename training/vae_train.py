@@ -31,7 +31,7 @@ def main():
   
   args = create_argparser().parse_args()
 
-  data = data_loader(name = args.dataset_name, root_folder='/content/')
+  data = data_loader(name = args.dataset_name, root_folder='datasets/')
 
   # (TO DO: wandb wrapper)
   wandb.init(project = args.dataset_name, entity="nrderus",

@@ -6,7 +6,6 @@ import numpy as np
 
 def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_label_train, labels, random_reconstructions=False, set ='train'):
 
-
     z_cond_train = model.sampling(train_x_mean, train_log_var, input_label_train)
 
     reconstruction_train = model.decoder(z_cond_train[:20])
@@ -42,9 +41,6 @@ def reconstructions(model, train_x, train_y, train_x_mean, train_log_var, input_
 
     #wandb.log({"Reconstructions_{}".format(set): wandb.Image(plt)})
     wandb.log({"Reconstructions": wandb.Image(plt, caption="Set:{}".format(set)) }) #
-
-
-####
 
 def reconstructions2(model, train_x, train_y, z_hat, labels):
     reconstruction = model.decoder(z_hat[:20])

@@ -1,7 +1,17 @@
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 
+def bn_relu(inputs):
+    bn = layers.BatchNormalization()(inputs)
+    relu =  layers.LeakyReLU(0.2)(bn)
+    return(relu)
+
+def bn_swish(inputs):
+    bn = layers.BatchNormalization()(inputs)
+    swish = layers.Activation('swish')(inputs)
+    return(swish)
 
 class EncoderResBlock(keras.Model):
     def __init__(self, filters, downsample):
@@ -33,7 +43,6 @@ class EncoderResBlock(keras.Model):
 
         input= input + shortcut
         return  layers.LeakyReLU(0.2)(input)
-
 
 class EncoderResNet(keras.Model):
     def __init__(self, resblock, repeat, encoded_dim):
@@ -90,7 +99,6 @@ class EncoderResNet(keras.Model):
 
     def get_config(self):
         return super().get_config()
-
 
 class ResBottleneckBlock(keras.Model): #check this
     def __init__(self, filters, downsample):
@@ -210,18 +218,6 @@ def encoderCNN( input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2, regul
     
     return model
 
-
-def bn_relu(inputs):
-    bn = layers.BatchNormalization()(inputs)
-    relu =  layers.LeakyReLU(0.2)(bn)
-    return(relu)
-
-
-def bn_swish(inputs):
-    bn = layers.BatchNormalization()(inputs)
-    swish = layers.Activation('swish')(inputs)
-    return(swish)
-
 #############
 # To DO. maxpool is in different place
 class EncoderMixNet(keras.Model):
@@ -292,9 +288,6 @@ class EncoderMixNet18(EncoderMixNet):
         x = layers.Input(input_shape, name='input', dtype='float32')
         return keras.models.Model(x, self.call(x), name='encoder')
 
-
-#
-import tensorflow as tf
 def encoder2(encoded_dim, category_count, second_dim, second_depth):
     z_cond = layers.Input(shape=(encoded_dim + category_count,), dtype='float32',
             name='Input')
@@ -312,7 +305,6 @@ def encoder2(encoded_dim, category_count, second_dim, second_depth):
     return model
 
 ### unet encoder
-
 def sinusoidal_embedding(x):
     embedding_min_frequency = 1.0
     frequencies = tf.exp(
@@ -327,7 +319,6 @@ def sinusoidal_embedding(x):
         [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3
     )
     return embeddings
-
 
 def ResidualBlock(width):
     def apply(x):
@@ -346,7 +337,6 @@ def ResidualBlock(width):
 
     return apply
 
-
 def DownBlock(width, block_depth):
     def apply(x):
         x, skips = x
@@ -358,7 +348,6 @@ def DownBlock(width, block_depth):
 
     return apply
 
-
 def UpBlock(width, block_depth):
     def apply(x):
         x, skips = x
@@ -369,7 +358,6 @@ def UpBlock(width, block_depth):
         return x
 
     return apply
-
 
 def unet_encoder( widths, block_depth, input_shape = (28, 28, 1),  label_size=2, encoded_dim = 2):
 

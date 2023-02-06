@@ -1,13 +1,14 @@
 import os
+import random
+import cv2
 import numpy as np
 import pandas as pd
-import random
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import cv2
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
+
 
 from glob import glob
 
@@ -18,7 +19,7 @@ def data_loader(name, root_folder):
     For a dataset, load training, test and validation set, along with info
     regarding the shape of the images and the number of categories.
     :param name: the name of the dataset
-    :param root folder: a dataset directory.
+    :param root folder: root folder for  dataset directory.
     """
     if name.lower() == 'mnist':
         category_count = 10
@@ -92,8 +93,12 @@ def data_loader(name, root_folder):
         labels = df.columns
     
     elif name.lower() == 'histo':
+        path = root_folder + '/breast-histopathology/IDC_regular_ps50_idx5'
+        if len(os.listdir(path)):
+            # download from Drive
+            return 'Download data from Kaggle: https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images'
+        imagePatches = glob(path + '/**/*.png', recursive=True)
         category_count = 2 
-        imagePatches = glob(root_folder +'/breast-histopathology/IDC_regular_ps50_idx5/**/*.png', recursive=True)
         class0 = [] # 0 = no cancer
         class1 = [] # 1 = cancer
 
@@ -131,7 +136,9 @@ def data_loader(name, root_folder):
     
     elif name.lower() == 'experimental':
   
-        (train_ds, val_ds), info = tfds.load("histo", split=[ "cancer[:30000] + non-cancer[:30000]", "cancer[30000:40000] + non-cancer[30000:40000]"], as_supervised=True, shuffle_files=False, with_info=True)
+        (train_ds, val_ds), info = tfds.load("histo", split=[ "cancer[:30000] + non-cancer[:30000]",
+                                                              "cancer[30000:40000] + non-cancer[30000:40000]"],
+                                                              as_supervised=True, shuffle_files=False, with_info=True)
 
         train_ds = train_ds.map(
                 normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
@@ -171,7 +178,7 @@ def get_image_arrays(data, label):
     img_arrays = []
     for i in data:
         if i.endswith('.png'):
-            img = cv2.imread(i ,cv2.IMREAD_COLOR)
+            img = cv2.imread(i, cv2.IMREAD_COLOR)
             img_sized = cv2.resize(img, (48, 48), #was (64,64) 
                         interpolation=cv2.INTER_LINEAR)
             img_arrays.append([img_sized, label]) 
