@@ -10,22 +10,21 @@ from tensorflow.keras import regularizers
 import wandb
 from wandb.keras import WandbCallback
 
-
 from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
 from training.vae_train_utils import args_to_dict
 from training.vae_train_utils import str2bool
 
-from src.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
-from src.decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
+from src.models.VAE.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
+from src.models.VAE.decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
 from src.datasets import data_loader
-from src.embeddings import embedding
-from src.reconstructions import reconstructions
-from src.generations import Generations
-from src.activations import VisualizeActivations
-from src.gradcam import GradCam
-from src.CVAE import CVAE
-from src.datasets import data_loader
+from src.models.VAE.embeddings import embedding
+from src.models.VAE.reconstructions import reconstructions
+from src.models.VAE.generations import Generations
+from src.models.VAE.activations import VisualizeActivations
+from src.models.VAE.gradcam import GradCam
+from src.models.VAE.CVAE import CVAE
+
 
 def main():
   
@@ -44,31 +43,33 @@ def main():
     "epochs": args.epoch_count,
     "batch_size": args.batch_size,
     "patience": args.patience,
-})
+    })
   # (TO DO: function load model)
   #cvae = create_model(**args_to_dict(args, vae_defaults().keys()))
   
   if 'resnet' in args.model_name:
       encoder = EncoderMixNet18(encoded_dim = args.encoded_dim)
-      encoder = encoder.model(input_shape=(args.input_shape[0], args.input_shape[1], args.input_shape[2] + args.category_count))
+      encoder = encoder.model(input_shape=(data['input_shape'][0], data['input_shape'][1], data['input_shape'][2] + data['category_count']))
   else:
-      encoder = encoderCNN(args.input_shape, args.category_count, args.encoded_dim,  regularizer=regularizers.L2(.001))
+      encoder = encoderCNN(data['input_shape'], data['category_count'], args.encoded_dim,  regularizer=regularizers.L2(.001))
   
   if 'resnet' in args.model_name:
       # decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 2)
       # decoder = decoder.model(input_shape=(encoded_dim + category_count,))
-      decoder = decoderCNN(args.input_shape, args.category_count, args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
+      decoder = decoderCNN(data['input_shape'], data['category_count'], args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
 
   else:
-      decoder = decoderCNN(args.input_shape, args.category_count, args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
-  
-  cvae = CVAE(encoder, decoder, args.kl_coefficient, args.input_shape, args.category_count)
+      decoder = decoderCNN(data['input_shape'], data['category_count'], args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
+
+  cvae = CVAE(encoder, decoder, args.kl_coefficient, data['input_shape'], data['category_count'])
   cvae.built = True
   cvae_input = cvae.encoder.input[0]
   cvae_output = cvae.decoder.output
   mu = cvae.encoder.get_layer('mu').output
   log_var = cvae.encoder.get_layer('log_var').output
 
+  opt = keras.optimizers.Adam(learning_rate = args.learning_rate)    
+  cvae.compile(optimizer = opt, run_eagerly = False)
   early_stop = keras.callbacks.EarlyStopping(monitor = 'val_loss',
              patience = args.patience, restore_best_weights = False)
 
@@ -89,7 +90,7 @@ def main():
   val_x_mean, val_log_var = cvae.encoder.predict(val_input)
   
   if args.embeddings:
-    embedding(args.encoded_dim, args.category_count, train_x_mean, test_x_mean, val_x_mean, data['train_y'], data['test_y'], data['val_y'], 
+    embedding(args.encoded_dim, data['category_count'], train_x_mean, test_x_mean, val_x_mean, data['train_y'], data['test_y'], data['val_y'], 
               train_log_var, test_log_var, val_log_var, data['labels'], quantity = 1000, avg_latent=True)
     
   if args.reconstructions:
@@ -103,7 +104,7 @@ def main():
     activations_decoder()
 
   if args.generations:
-    generator = Generations(cvae, args.encoded_dim, args.category_count, args.input_shape, args.labels)
+    generator = Generations(cvae, args.encoded_dim, data['category_count'], data['input_shape'], args.labels)
     generator()
    
   if args.gradcam:
@@ -121,7 +122,9 @@ def main():
       target_layer = "block3_conv2"
     gc = GradCam(cvae, data['test_x'], data['test_y_one_hot'], HQ = True, target_layer = target_layer)
     gc.gradcam()
-  
+
+  wandb.finish(exit_code=0, quiet = True)
+
 def create_argparser():
     defaults = dict(
         dataset_name = 'histo',

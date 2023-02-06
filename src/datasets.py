@@ -93,10 +93,11 @@ def data_loader(name, root_folder):
         labels = df.columns
     
     elif name.lower() == 'histo':
-        path = root_folder + '/breast-histopathology/IDC_regular_ps50_idx5'
-        if len(os.listdir(path)):
+        path = root_folder + 'breast-histopathology/IDC_regular_ps50_idx5'
+       # if len(os.listdir(path)):
             # download from Drive
-            return 'Download data from Kaggle: https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images'
+       #     print( 'Download data from Kaggle: https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images')
+       #     return
         imagePatches = glob(path + '/**/*.png', recursive=True)
         category_count = 2 
         class0 = [] # 0 = no cancer
