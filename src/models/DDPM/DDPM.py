@@ -44,6 +44,20 @@ def UpBlock(width, block_depth):
 
     return apply
 
+def sinusoidal_embedding(x, embedding_max_frequency = 1000.0, embedding_dims=512):
+        embedding_min_frequency = 1.0
+        frequencies = tf.exp(
+            tf.linspace(
+                tf.math.log(embedding_min_frequency),
+                tf.math.log(embedding_max_frequency),
+                embedding_dims // 2,
+            )
+        )
+        angular_speeds = 2.0 * math.pi * frequencies
+        embeddings = tf.concat(
+            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3 )
+        return embeddings
+
 class DiffusionModel(keras.Model):
     def __init__(self, image_size, widths, block_depth, embedding_max_frequency, embedding_dims, batch_size, min_signal_rate, max_signal_rate, ema, kid_diffusion_steps, plot_diffusion_steps, kid_image_size):
         super().__init__()
@@ -76,26 +90,11 @@ class DiffusionModel(keras.Model):
         images = self.normalizer.mean + images * self.normalizer.variance**0.5
         return tf.clip_by_value(images, 0.0, 1.0)
     
-
-    def sinusoidal_embedding(self, x):
-        embedding_min_frequency = 1.0
-        frequencies = tf.exp(
-            tf.linspace(
-                tf.math.log(embedding_min_frequency),
-                tf.math.log(self.embedding_max_frequency),
-                self.embedding_dims // 2,
-            )
-        )
-        angular_speeds = 2.0 * math.pi * frequencies
-        embeddings = tf.concat(
-            [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3 )
-        return embeddings
-    
     def get_network(self, image_size, widths, block_depth):
         noisy_images = keras.Input(shape=(image_size, image_size, 3))
         noise_variances = keras.Input(shape=(1, 1, 1))
 
-        e = layers.Lambda(self.sinusoidal_embedding)(noise_variances)
+        e = layers.Lambda(sinusoidal_embedding)(noise_variances)
         e = layers.UpSampling2D(size=image_size, interpolation="nearest")(e)
 
         x = layers.Conv2D(widths[0], kernel_size=1)(noisy_images)

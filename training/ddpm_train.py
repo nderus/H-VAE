@@ -3,21 +3,20 @@ import argparse
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-
 from tensorflow import keras
 from keras import layers
-
 from src.models.DDPM.DDPM import DiffusionModel
 from training.ddpm_train_utils import ddpm_defaults
 from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import args_to_dict
 from training.ddpm_train_utils import str2bool
 from training.ddpm_train_utils import preprocess_image
+from training.ddpm_train_utils import KID
 
 def main():
   
     args = create_argparser().parse_args()
-    builder = tfds.builder_from_directory('/datasets/=//histo/1.0.0')
+    builder = tfds.builder_from_directory('datasets/=/histo/1.0.0')
     # Construct the tf.data.Dataset pipeline
     train_ds, val_ds = builder.as_dataset(split = ["cancer[:60000]",
                                                   "cancer[60000:70000]"],
@@ -30,8 +29,8 @@ def main():
     val_ds = val_ds.repeat(args.dataset_repetitions).shuffle(10 * args.batch_size)
     val_ds = val_ds.batch(args.batch_size, drop_remainder = True).prefetch(buffer_size = tf.data.AUTOTUNE)
 
-
     
+        
     # create and compile the model
     model = DiffusionModel(image_size = args.image_size,
                            widths = args.widths, 
