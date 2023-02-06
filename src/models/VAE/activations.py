@@ -1,4 +1,3 @@
-from json import encoder
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras import models

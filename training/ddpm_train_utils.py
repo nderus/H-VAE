@@ -1,7 +1,6 @@
 import argparse
 import tensorflow as tf
 from tensorflow import keras
-import tensorflow_datasets as tfds
 from keras import layers
 
 def ddpm_defaults():

@@ -1,3 +1,6 @@
+"""
+Train a DDPM model on images as refiner to VAEs 
+"""
 import argparse
 import tensorflow as tf
 import tensorflow_datasets as tfds
