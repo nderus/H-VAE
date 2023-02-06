@@ -8,8 +8,6 @@ import tensorflow_datasets as tfds
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-
-
 from glob import glob
 
 # TO DO: same method for loading, maybe TFRecord datasets
