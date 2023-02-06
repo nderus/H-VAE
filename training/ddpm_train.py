@@ -29,8 +29,6 @@ def main():
     val_ds = val_ds.repeat(args.dataset_repetitions).shuffle(10 * args.batch_size)
     val_ds = val_ds.batch(args.batch_size, drop_remainder = True).prefetch(buffer_size = tf.data.AUTOTUNE)
 
-    
-        
     # create and compile the model
     model = DiffusionModel(image_size = args.image_size,
                            widths = args.widths, 
