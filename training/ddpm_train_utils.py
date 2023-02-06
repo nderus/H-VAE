@@ -1,31 +1,32 @@
 import argparse
+import tensorflow as tf
+from tensorflow import keras
+import tensorflow_datasets as tfds
+from keras import layers
 
 def ddpm_defaults():
     """
     Defaults for DDPM models.
     """
     return dict(
-        dataset_name = 'histo',
-        dataset_repetitions = 5,
-        num_epochs = 100,  # train for at least 50 epochs for good results
-        image_size = 64,
-        # KID = Kernel Inception Distance, see related section
+        dataset_name = "histo",
+        dataset_repetitions = 15,
+        num_epochs = 50, 
+        image_size = 48,
         kid_image_size = 75,
         kid_diffusion_steps = 5,
-        plot_diffusion_steps = 20,
-        # sampling
-        min_signal_rate = 0.05, #was 0.02
+        plot_diffusion_steps = 1000,
+        min_signal_rate = 0.15,
         max_signal_rate = 0.95,
-        # architecture
-        embedding_dims = 32,
+        embedding_dims = 512,
         embedding_max_frequency = 1000.0,
-        widths = [32, 64, 96, 128],
+        widths = [32, 64, 96, 128, 256],
         block_depth = 4,
-        # optimization
         batch_size = 64,
         ema = 0.999,
-        learning_rate = 1e-3, #was 1e-2 but exploded
-        weight_decay = 1e-4,            
+        learning_rate = 1e-3,
+        weight_decay = 1e-4,
+        checkpoint_path = "/checkpoints/diffusion_model"          
     )
 
 def add_dict_to_argparser(parser, default_dict):
@@ -52,6 +53,40 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError("boolean value expected")
+
+def preprocess_image(data):
+    # center crop image
+    
+    height = tf.shape(data["image"])[0] 
+    width = tf.shape(data["image"])[1] 
+    crop_size = 48
+    image = tf.image.crop_to_bounding_box(
+        data["image"],
+        0,
+        0,
+        crop_size,
+        crop_size,
+    )
+  
+
+    # resize and clip
+    # for image downsampling it is important to turn on antialiasing
+    image = tf.image.resize(image, size=[image_size, image_size], antialias=True)
+    return tf.clip_by_value(image / 255.0, 0.0, 1.0)
+
+def prepare_dataset(split):
+    # the validation dataset is shuffled as well, because data order matters
+    # for the KID estimation
+    return (
+        #tfds.load(dataset_name, split=split, shuffle_files=True)
+        tfds.as_dataframe(builder.as_dataset())
+        .map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
+        .cache()
+        .repeat(dataset_repetitions)
+        .shuffle(10 * batch_size)
+        .batch(batch_size, drop_remainder=True)
+        .prefetch(buffer_size=tf.data.AUTOTUNE)
+    )
 
 class KID(keras.metrics.Metric):
     def __init__(self, name, **kwargs):

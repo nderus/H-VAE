@@ -139,4 +139,6 @@ cvae_decoder/
 /~/
 
 /datasets/
+/checkpoints/
 /src/wandb_wrapper.py
+*.DS_Store
