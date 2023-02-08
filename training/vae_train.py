@@ -1,6 +1,7 @@
 """
 Train a VAE model on images.
 """
+import os
 import argparse
 from tensorflow import keras
 import tensorflow as tf
@@ -103,7 +104,7 @@ def main():
     activations_decoder()
 
   if args.generations:
-    generator = Generations(cvae, args.encoded_dim, data['category_count'], data['input_shape'], args.labels)
+    generator = Generations(cvae, args.encoded_dim, data['category_count'], data['input_shape'], data['labels'])
     generator()
    
   if args.gradcam:
@@ -124,6 +125,14 @@ def main():
 
   wandb.finish(exit_code=0, quiet = True)
 
+  if args.ddpm_refiner:
+    #cvae.encoder.load_weights('checkpoints/VAE/encoder_weights2.h5')
+    #cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
+    from training.ddpm_train import main as ddpm
+    ddpm()
+
+
+
 def create_argparser():
     defaults = dict(
         dataset_name = 'histo',
@@ -141,6 +150,7 @@ def create_argparser():
         activations = False,
         gradcam = False,
         gradcamHQ = False,
+        ddpm_refiner = False,
     )
     defaults.update(vae_defaults())
     parser = argparse.ArgumentParser()

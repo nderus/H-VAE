@@ -11,7 +11,7 @@ from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import preprocess_image
 from training.ddpm_train_utils import KID
 
-def main():
+def main(cvae, cvae_encoded_dim):
   
     args = create_argparser().parse_args()
     builder = tfds.builder_from_directory('datasets/=/histo/1.0.0')
@@ -30,16 +30,17 @@ def main():
     model = DiffusionModel(image_size = args.image_size,
                            widths = args.widths, 
                            block_depth = args.block_depth, 
-                           embedding_max_frequency = args.embedding_max_frequency,
-                           embedding_dims =args.embedding_dims,
                            batch_size = args.batch_size,
                            min_signal_rate = args.min_signal_rate, 
                            max_signal_rate = args.max_signal_rate, 
-                           ema = args.ema, 
+                           cvae = cvae,
                            kid_diffusion_steps = args.kid_diffusion_steps, 
                            plot_diffusion_steps = args.plot_diffusion_steps,
-                           kid_image_size = args.kid_image_size)
-    
+                           encoded_dim = cvae_encoded_dim,
+                           ema = args.ema, 
+                           kid_image_size= args.kid_image_size
+                           )
+  
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=args.learning_rate,

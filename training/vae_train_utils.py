@@ -20,6 +20,7 @@ def vae_defaults():
         activations = False,
         gradcam = False,
         gradcamHQ = False,
+        ddpm_refiner = False,
         
     )
 
