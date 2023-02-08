@@ -9,7 +9,7 @@ from src.models.DDPM.DDPM import DiffusionModel
 from training.ddpm_train_utils import ddpm_defaults
 from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import preprocess_image
-from training.ddpm_train_utils import KID
+
 
 def main(cvae, cvae_encoded_dim):
   

@@ -4,7 +4,6 @@ Classification of histopathological images.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from keras.utils.np_utils import to_categorical
 import keras.backend as K
 from sklearn.metrics import confusion_matrix
 import numpy as np
