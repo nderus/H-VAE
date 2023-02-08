@@ -1,19 +1,18 @@
 """
 Train a VAE model on images.
 """
-import os
 import argparse
 from tensorflow import keras
-import tensorflow as tf
-from tensorflow.keras import backend
-from tensorflow.keras import regularizers
+#import tensorflow as tf
+#from tensorflow.keras import regularizers
+from keras import regularizers
 import wandb
 from wandb.keras import WandbCallback
 
 from training.vae_train_utils import vae_defaults
 from training.vae_train_utils import add_dict_to_argparser
-from training.vae_train_utils import args_to_dict
-from training.vae_train_utils import str2bool
+#from training.vae_train_utils import args_to_dict
+#from training.vae_train_utils import str2bool
 
 from src.models.VAE.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
 from src.models.VAE.decoders import DecoderResNet18, DecoderResNet34, DecoderResNet50, decoderCNN
