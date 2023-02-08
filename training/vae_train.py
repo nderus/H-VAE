@@ -129,7 +129,7 @@ def main():
     #cvae.encoder.load_weights('checkpoints/VAE/encoder_weights2.h5')
     #cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
     from training.ddpm_train import main as ddpm
-    ddpm()
+    ddpm(cvae, args.encoded_dim)
 
 
 
