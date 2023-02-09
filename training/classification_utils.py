@@ -15,7 +15,7 @@ def cnn_defaults():
         model_name = 'CNN',
         class_names = ('non-cancer','cancer'),
         batch_size = 250,
-        epoch_count = 20,
+        epoch_count = 1,
         synthetic_data = True,        
     )
 

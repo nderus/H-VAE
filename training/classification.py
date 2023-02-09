@@ -5,7 +5,7 @@ Classification of histopathological images.
 import argparse
 from tensorflow import keras
 from tensorflow.keras import layers
-
+from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix
 import numpy as np
 
@@ -33,9 +33,14 @@ def main():
         synthetic_y = np.repeat(1, len(synthetic_x))
         data['train_y'] = np.concatenate([data['train_y'], synthetic_y], axis=0)
 
-    train_y_label = np.argmax(data['train_y'], axis=1) # from one-hot encoding to integer
-    test_y_label = np.argmax(data['test_y'], axis=1)
-    val_y_label = np.argmax(data['val_y'], axis=1)
+   
+    train_y_one_hot = to_categorical(data['train_y'], data['category_count'])
+    test_y_one_hot = to_categorical(data['test_y'], data['category_count'])
+    val_y_one_hot = to_categorical(data['val_y'], data['category_count']) 
+
+    train_y_label = [args.class_names[i] for i in data['train_y']]
+    test_y_label = [args.class_names[i] for i in data['test_y']]
+    val_y_label = [args.class_names[i] for i in data['val_y']]
 
     model = CNN((48, 48, 3), 2)
     model.summary()
@@ -43,8 +48,8 @@ def main():
     optimizer=keras.optimizers.Adam()
     model.compile(optimizer = optimizer, loss='binary_crossentropy', metrics=METRICS)
 
-    history = model.fit(data['train_x'], data['train_y'], args.batch_size, args.epoch_count,
-            validation_data = (data['val_x'], data['val_y']))
+    history = model.fit(data['train_x'], train_y_one_hot, args.batch_size, args.epoch_count,
+            validation_data = (data['val_x'], val_y_one_hot))
 
     Train_Val_Plot(history.history['accuracy'],history.history['val_accuracy'],
                 history.history['loss'],history.history['val_loss'],
