@@ -167,7 +167,7 @@ ncurses=6.3=h27087fc_1
 nettle=3.8.1=hc379101_1
 nspr=4.35=h27087fc_0
 nss=3.82=he02c5a1_0
-numpy=1.24.2=py310h8deb116_0
+numpy=1.21.6=py310h45f3432_0
 oauthlib=3.2.2=pyhd8ed1ab_0
 opencv=4.6.0=py310hff52083_3
 openh264=2.3.1=hcb278e6_2
