@@ -51,7 +51,7 @@ def main(cvae, cvae_encoded_dim):
 
     # calculate mean and variance of training dataset for normalization
     model.normalizer.adapt(train_ds)
-    model.load_weights(args.checkpoint_path)
+    #model.load_weights(args.checkpoint_path)
 
     batches = args.num_samples // args.batch_size
 

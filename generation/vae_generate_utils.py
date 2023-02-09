@@ -11,6 +11,7 @@ def vae_generate_defaults():
         learning_rate = 0.0001,
         batch_size = 32,
         num_samples = 100,
+        ddpm_refiner = True,
     )
 
 def add_dict_to_argparser(parser, default_dict):

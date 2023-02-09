@@ -61,6 +61,9 @@ def main():
     result = np.array(result, dtype=object)
     np.save('datasets/synthetic/vae_synthetic_dataset.npy', result)
 
+    if args.ddpm_refiner:
+            from generation.ddpm_generate import main as ddpm
+            ddpm(cvae, args.encoded_dim)
         
 def create_argparser():
     defaults = dict(
@@ -71,6 +74,7 @@ def create_argparser():
         learning_rate = 0.0001,
         batch_size = 32,
         num_samples = 100,
+        ddpm_refiner = True,
     )
     defaults.update(vae_generate_defaults())
     parser = argparse.ArgumentParser()
