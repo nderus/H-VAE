@@ -299,7 +299,6 @@ class DiffusionModel(keras.Model):
 
         y = self.cvae.decoder(initial_noise)
         #y = (y - tf.experimental.numpy.mean(y)) / tf.experimental.numpy.std(y)
-   
         x_t = tf.random.normal(mean = y, shape=(num_images, self.image_size, self.image_size, 3))
   
         generated_images = self.reverse_diffusion(x_t, diffusion_steps, y)

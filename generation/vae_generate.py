@@ -1,3 +1,6 @@
+"""
+Generate synthetic datasets from the VAE backbone.
+"""
 import argparse
 import tensorflow as tf
 from tensorflow import keras
@@ -24,8 +27,6 @@ def main():
         encoder = encoderCNN(data['input_shape'], data['category_count'], args.encoded_dim,  regularizer=regularizers.L2(.001))
 
     if 'resnet' in args.model_name:
-        # decoder = DecoderResNet18( encoded_dim = encoded_dim, final_stride = 2)
-        # decoder = decoder.model(input_shape=(encoded_dim + category_count,))
         decoder = decoderCNN(data['input_shape'], data['category_count'], args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
     else:
         decoder = decoderCNN(data['input_shape'], data['category_count'], args.encoded_dim, final_stride = 1, regularizer=regularizers.L2(.001))
@@ -36,21 +37,37 @@ def main():
     opt = keras.optimizers.Adam(learning_rate = args.learning_rate)    
     cvae.compile(optimizer = opt, run_eagerly = False)
 
-    generated_images = []
+    cvae.encoder.load_weights('checkpoints/VAE/encoder_weights2.h5')
+    cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
 
-    while len(generated_images) * args.batch_size < args.num_samples:
-        initial_noise = tf.random.normal( mean=0., stddev=1.0, shape=(args.num_samples, args.encoded_dim)) 
+    def vae_generate(num_images):
+        initial_noise = tf.random.normal( mean=0., stddev=1.0, shape=(num_images, args.encoded_dim)) 
         condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
-        condition = tf.repeat(condition, repeats = [args.num_samples], axis=0)
+        condition = tf.repeat(condition, repeats = [num_images], axis=0)
         initial_noise = layers.Concatenate()([initial_noise, condition])
-        generated_images.append(cvae.decoder(initial_noise) )
+        return(cvae.decoder(initial_noise))
+    
+    batches = args.num_samples // args.batch_size
 
+    result = [vae_generate(args.batch_size) for _ in range(batches)]
+    result.append(vae_generate(args.num_samples % args.batch_size))
+
+    print('Generated {} images in {} batches of {} + a minibatch of {}'.format(args.num_samples, 
+                                                                               batches,
+                                                                               args.batch_size,
+                                                                               args.num_samples % args.batch_size))
+
+    result = np.array(result, dtype=object)
+    np.save('datasets/synthetic/vae_synthetic_dataset.npy', result)
+
+        
 def create_argparser():
     defaults = dict(
         dataset_name = 'histo',
         model_name = 'CVAE_resnet_l2',
         encoded_dim = 1024 + 2048,
+        kl_coefficient = 0.001,
         learning_rate = 0.0001,
         batch_size = 32,
         num_samples = 100,
@@ -62,4 +79,3 @@ def create_argparser():
 
 if __name__ == "__main__":
   main()
-

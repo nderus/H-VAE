@@ -1,14 +1,15 @@
 """
-Train a DDPM model on images as refiner to VAEs.
+Generate synthetic datasets from the VAE backbone + DDPM refiner.
 """
 import argparse
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
+import numpy as np
 from src.models.DDPM.DDPM import DiffusionModel
-from training.ddpm_train_utils import ddpm_defaults
-from training.ddpm_train_utils import add_dict_to_argparser
-from training.ddpm_train_utils import preprocess_image
+from generation.ddpm_generate_utils import ddpm_defaults
+from generation.ddpm_generate_utils import add_dict_to_argparser
+from generation.ddpm_generate_utils import preprocess_image
 
 
 def main(cvae, cvae_encoded_dim):
@@ -48,39 +49,27 @@ def main(cvae, cvae_encoded_dim):
         loss=keras.losses.mean_absolute_error,
     )
 
-    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath = args.checkpoint_path,
-        save_weights_only = True,
-        monitor = "val_kid",
-        mode = "min",
-        save_best_only = True,
-    )
-
     # calculate mean and variance of training dataset for normalization
     model.normalizer.adapt(train_ds)
-
-    if args.train_from_checkpoint:
-        model.load_weights(args.checkpoint_path)
-
-    # run training and plot generated images periodically
-    model.fit(
-        train_ds,
-        epochs = args.num_epochs,
-        validation_data = val_ds,
-        callbacks=[
-            keras.callbacks.LambdaCallback(on_epoch_end = model.plot_images),
-            checkpoint_callback,
-        ],
-    )
-
     model.load_weights(args.checkpoint_path)
-    model.plot_images()
+
+    batches = args.num_samples // args.batch_size
+
+    result = [model.generate(args.batch_size, args.plot_diffusion_steps) for _ in range(batches)]
+    result.append(model.generate(args.num_samples % args.batch_size, args.plot_diffusion_steps))
+
+    print('Generated {} images in {} batches of {} + a minibatch of {}'.format(args.num_samples, 
+                                                                               batches,
+                                                                               args.batch_size,
+                                                                               args.num_samples % args.batch_size))
+
+    result = np.array(result, dtype=object)
+    np.save('datasets/synthetic/ddpm_synthetic_dataset.npy', result)
 
 def create_argparser():
     defaults = dict(
         dataset_name = 'histo',
         dataset_repetitions = 15,
-        num_epochs = 100, 
         image_size = 48,
         kid_image_size = 75,
         kid_diffusion_steps = 5,
@@ -95,8 +84,8 @@ def create_argparser():
         ema = 0.999,
         learning_rate = 1e-3,
         weight_decay = 1e-4,     
-        checkpoint_path = "/checkpoints/diffusion_model",
-        train_from_checkpoint = False,  
+        checkpoint_path = "checkpoints/diffusion_model",
+        num_samples = 100,
     )
     defaults.update(ddpm_defaults())
     parser = argparse.ArgumentParser()
@@ -105,4 +94,3 @@ def create_argparser():
 
 if __name__ == "__main__":
   main()
-

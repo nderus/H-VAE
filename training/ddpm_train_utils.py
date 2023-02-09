@@ -8,9 +8,9 @@ def ddpm_defaults():
     Defaults for DDPM models.
     """
     return dict(
-        dataset_name = "histo",
+        dataset_name = 'histo',
         dataset_repetitions = 15,
-        num_epochs = 50, 
+        num_epochs = 100, 
         image_size = 48,
         kid_image_size = 75,
         kid_diffusion_steps = 5,
@@ -24,8 +24,10 @@ def ddpm_defaults():
         batch_size = 64,
         ema = 0.999,
         learning_rate = 1e-3,
-        weight_decay = 1e-4,
-        checkpoint_path = "/checkpoints/diffusion_model"          
+        weight_decay = 1e-4,     
+        checkpoint_path = "/checkpoints/diffusion_model",
+        train_from_checkpoint = False,  
+
     )
 
 def add_dict_to_argparser(parser, default_dict):
