@@ -23,4 +23,8 @@ Please refer to the scripts provided in the table corresponding to some training
 
 ---
 
+`conda create --name H-VAE --file requirements.txt` 
+
+---
+
 Since our model uses diffusion models please consider citing the original [DiffuseVAE](https://arxiv.org/abs/2201.00308) [Diffusion model](https://arxiv.org/abs/1503.03585), [DDPM](https://arxiv.org/abs/2006.11239) and [VAE](https://arxiv.org/abs/1312.6114) papers.
