@@ -113,7 +113,7 @@ def data_loader(name, root_folder):
         sampled_class1 = random.sample(class1, 78000)
         class0_array = get_image_arrays(sampled_class0, 0)
         class1_array = get_image_arrays(sampled_class1, 1)
-        combined_data = np.concatenate((class0_array, class1_array))
+        combined_data = np.concatenate((class0_array, class1_array), 2)
 
         X = []
         y = []
