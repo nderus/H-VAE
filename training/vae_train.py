@@ -80,6 +80,9 @@ def main():
                    batch_size = args.batch_size,
                    callbacks=[early_stop, WandbCallback(save_model = False) ]) 
   
+  cvae.encoder.save_weights('checkpoints/VAE/encoder_weights2.h5')
+  cvae.decoder.save_weights('checkpoints/VAE/decoder_weights2.h5')
+
   _, input_label_train, train_input = cvae.conditional_input([data['train_x'][:1000], data['train_y_one_hot'][:1000]])
   _, input_label_test, test_input = cvae.conditional_input([data['test_x'][:1000], data['test_y_one_hot'][:1000]])
   _, input_label_val, val_input = cvae.conditional_input([data['val_x'][:1000], data['val_y_one_hot'][:1000]])
@@ -129,8 +132,6 @@ def main():
     #cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
     from training.ddpm_train import main as ddpm
     ddpm(cvae, args.encoded_dim)
-
-
 
 def create_argparser():
     defaults = dict(

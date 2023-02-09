@@ -7,6 +7,7 @@ def bn_relu(inputs):
     relu = layers.LeakyReLU(0.2)(bn)
     return(relu)
 #NB: original had relu and upsample(4)
+
 class DecoderResBlock(keras.Model):
     def __init__(self, filters, upsample):
         super().__init__()
