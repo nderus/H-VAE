@@ -31,7 +31,9 @@ Please refer to the scripts provided in the table corresponding to some training
 
 ---
 
-`conda create --name H-VAE --file requirements.txt` 
+` conda config --add channels conda-forge` 
+
+` conda create --name H-VAE --file requirements.txt` 
 
 ---
 
