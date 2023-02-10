@@ -40,7 +40,7 @@ Please refer to the scripts provided in the table corresponding to some training
 
 ` conda install -c anaconda conda-build`
 
-` conda develop PATH-TO-DIRECTORY/H-VAE`
+` conda develop PATH-TO-DIRECTORY/H-VAE/`
 
 ---
 
