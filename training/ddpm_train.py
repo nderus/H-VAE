@@ -9,7 +9,7 @@ from src.models.DDPM.DDPM import DiffusionModel
 from training.ddpm_train_utils import ddpm_defaults
 from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import preprocess_image
-
+from wandb.keras import WandbCallback
 
 def main(cvae, cvae_encoded_dim):
   
@@ -18,7 +18,8 @@ def main(cvae, cvae_encoded_dim):
     # Construct the tf.data.Dataset pipeline
     train_ds, val_ds = builder.as_dataset(split = ["cancer[:60000]",
                                                   "cancer[60000:70000]"],
-                                                  as_supervised=False, shuffle_files=False)
+                                                  as_supervised=False,
+                                                  shuffle_files=False)
     
     train_ds = train_ds.map(preprocess_image, num_parallel_calls = tf.data.AUTOTUNE).cache()
     train_ds = train_ds.repeat(args.dataset_repetitions).shuffle(10 * args.batch_size)
@@ -70,11 +71,12 @@ def main(cvae, cvae_encoded_dim):
         callbacks=[
             keras.callbacks.LambdaCallback(on_epoch_end = model.plot_images),
             checkpoint_callback,
+            WandbCallback(save_model = False),
         ],
     )
 
     model.load_weights(args.checkpoint_path)
-    model.plot_images()
+    model.plot_images(wandb_log = True)
 
 def create_argparser():
     defaults = dict(

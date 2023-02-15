@@ -138,8 +138,8 @@ cvae_decoder/
 ~/
 /~/
 
-/datasets/
+datasets/
+checkpoints/
 /colab/
-/checkpoints/
 /src/wandb_wrapper.py
 *.DS_Store

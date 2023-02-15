@@ -5,6 +5,7 @@ from tensorflow import keras
 from keras import layers
 import matplotlib.pyplot as plt
 from training.ddpm_train_utils import KID
+import wandb
 
 def ResidualBlock(width):
     def apply(x):
@@ -270,7 +271,7 @@ class DiffusionModel(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
-    def plot_images(self, epoch=None, logs=None, num_rows=1, num_cols=6, save = True):
+    def plot_images(self, epoch=None, logs=None, num_rows=1, num_cols=6, save = True, wandb_log = False):
         # plot random generated images for visual evaluation of generation quality
         generated_images = self.generate(
             num_images=num_rows * num_cols,
@@ -286,6 +287,9 @@ class DiffusionModel(keras.Model):
         plt.tight_layout()
         if save:
           plt.savefig('/content/drive/MyDrive/plot_images/plot_images_diffusion_conditional.png')
+        if wandb_log:
+          wandb.log({"Images": wandb.Image(plt, caption="Diffusion images") })
+
         plt.show()
         plt.close()
 

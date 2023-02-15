@@ -2,14 +2,16 @@
 Train a VAE model on images.
 """
 import argparse
+import tensorflow as tf
 from tensorflow import keras
 #import tensorflow as tf
 #from tensorflow.keras import regularizers
-from keras import regularizers
+from tensorflow.keras import regularizers
 import wandb
 from wandb.keras import WandbCallback
 
 from training.vae_train_utils import vae_defaults
+from training.vae_train_utils import vae_sweep
 from training.vae_train_utils import add_dict_to_argparser
 #from training.vae_train_utils import args_to_dict
 #from training.vae_train_utils import str2bool
@@ -153,6 +155,7 @@ def create_argparser():
         ddpm_refiner = False,
     )
     defaults.update(vae_defaults())
+    defaults.update(vae_sweep())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser
