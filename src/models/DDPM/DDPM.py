@@ -46,7 +46,7 @@ def UpBlock(width, block_depth):
 
     return apply
 
-def sinusoidal_embedding(x, embedding_max_frequency = 1000.0, embedding_dims=512):
+def sinusoidal_embedding(x, embedding_max_frequency = 1000.0, embedding_dims=128): # was 512
         embedding_min_frequency = 1.0
         frequencies = tf.exp(
             tf.linspace(
@@ -194,8 +194,7 @@ class DiffusionModel(keras.Model):
         noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
         condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
-        condition = tf.repeat(condition, repeats = [64], axis=0)
-      
+        condition = tf.repeat(condition, repeats = [self.batch_size], axis=0)
         reconstructions = self.cvae([images, condition])
 
         # sample uniform random diffusion times
@@ -236,7 +235,7 @@ class DiffusionModel(keras.Model):
         noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
         condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
-        condition = tf.repeat(condition, repeats = [64], axis=0)
+        condition = tf.repeat(condition, repeats = [self.batch_size], axis=0)
         reconstructions = self.cvae([images, condition])
       
         # sample uniform random diffusion times
