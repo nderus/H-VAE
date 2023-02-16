@@ -9,6 +9,7 @@ from src.models.DDPM.DDPM import DiffusionModel
 from training.ddpm_train_utils import ddpm_defaults
 from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import preprocess_image
+from training.ddpm_train_utils import ddpm_sweep
 from wandb.keras import WandbCallback
 
 def main(cvae, cvae_encoded_dim):
@@ -101,6 +102,7 @@ def create_argparser():
         train_from_checkpoint = False,  
     )
     defaults.update(ddpm_defaults())
+    defaults.update(ddpm_sweep())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser

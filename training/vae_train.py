@@ -155,7 +155,7 @@ def create_argparser():
         ddpm_refiner = False,
     )
     defaults.update(vae_defaults())
-    defaults.update(vae_sweep())
+    #defaults.update(vae_sweep())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser

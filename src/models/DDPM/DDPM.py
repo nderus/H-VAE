@@ -80,7 +80,7 @@ def get_network(image_size, widths, block_depth):
     for width in reversed(widths[:-1]):
         x = UpBlock(width, block_depth)([x, skips])
 
-    layer = tf.keras.layers.MultiHeadAttention(num_heads=8, key_dim=16, attention_axes=(2, 3)) #added, was , num_heads=16, key_dim=64
+    layer = tf.keras.layers.MultiHeadAttention(num_heads=4, key_dim=128, attention_axes=(2, 3)) #added, was , num_heads=8, key_dim=16
     output_tensor = layer(x, x) #added
     x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(output_tensor)
 

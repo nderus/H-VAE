@@ -2,6 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
+import wandb
 
 def ddpm_defaults():
     """
@@ -28,6 +29,21 @@ def ddpm_defaults():
         checkpoint_path = "/checkpoints/diffusion_model",
         train_from_checkpoint = False,  
 
+    )
+
+def ddpm_sweep():
+    """
+    Input config options for wandb sweep.
+    """
+    wandb.init(entity='nrderus', project='DDPM-sweep')
+    return dict(
+        block_depth = wandb.config.block_depth,
+        batch_size = wandb.config.batch_size,
+        min_signal_rate = wandb.config.min_signal_rate,
+        plot_diffusion_steps = wandb.config.plot_diffusion_steps,
+        embedding_dims = wandb.config.embedding_dims,
+        learning_rate = wandb.config.learning_rate,
+        epoch_count = wandb.config.epoch_count,
     )
 
 def add_dict_to_argparser(parser, default_dict):
