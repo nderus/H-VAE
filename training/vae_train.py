@@ -35,17 +35,17 @@ def main():
   data = data_loader(name = args.dataset_name, root_folder='datasets/')
 
   # (TO DO: wandb wrapper)
-  # wandb.init(project = args.dataset_name, entity="nrderus",
-  #   config = {
-  #   "dataset": args.dataset_name,
-  #   "model": args.model_name,
-  #   "encoded_dim": args.encoded_dim,
-  #   "kl_coefficient": args.kl_coefficient,
-  #   "learning_rate": args.learning_rate,
-  #   "epochs": args.epoch_count,
-  #   "batch_size": args.batch_size,
-  #   "patience": args.patience,
-  #   })
+  wandb.init(project = args.dataset_name, entity="nrderus",
+    config = {
+    "dataset": args.dataset_name,
+    "model": args.model_name,
+    "encoded_dim": args.encoded_dim,
+    "kl_coefficient": args.kl_coefficient,
+    "learning_rate": args.learning_rate,
+    "epochs": args.epoch_count,
+    "batch_size": args.batch_size,
+    "patience": args.patience,
+    })
   # (TO DO: function load model)
   #cvae = create_model(**args_to_dict(args, vae_defaults().keys()))
 
