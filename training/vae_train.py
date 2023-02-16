@@ -11,7 +11,7 @@ import wandb
 from wandb.keras import WandbCallback
 
 from training.vae_train_utils import vae_defaults
-from training.vae_train_utils import vae_sweep
+#from training.vae_train_utils import vae_sweep
 from training.vae_train_utils import add_dict_to_argparser
 #from training.vae_train_utils import args_to_dict
 #from training.vae_train_utils import str2bool
@@ -29,7 +29,8 @@ from src.models.VAE.CVAE import CVAE
 
 def main():
   
-  args = create_argparser().parse_args()
+  #args = create_argparser().parse_args()
+  args, _ = create_argparser().parse_known_args()
 
   data = data_loader(name = args.dataset_name, root_folder='datasets/')
 
@@ -158,6 +159,7 @@ def create_argparser():
     #defaults.update(vae_sweep())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
+    #parser.add_argument('extras', nargs=argparse.REMAINDER)
     return parser
 
 if __name__ == "__main__":

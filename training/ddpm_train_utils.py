@@ -40,7 +40,6 @@ def ddpm_sweep():
         block_depth = wandb.config.block_depth,
         batch_size = wandb.config.batch_size,
         min_signal_rate = wandb.config.min_signal_rate,
-        plot_diffusion_steps = wandb.config.plot_diffusion_steps,
         embedding_dims = wandb.config.embedding_dims,
         learning_rate = wandb.config.learning_rate,
         epoch_count = wandb.config.epoch_count,

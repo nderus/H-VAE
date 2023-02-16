@@ -25,19 +25,19 @@ def vae_defaults():
         
     )
 
-def vae_sweep():
-    """
-    Input config options for wandb sweep.
-    """
-    wandb.init(entity='nrderus', project='VAE-sweep')
-    return dict(
-        kl_coefficient = wandb.config.kl_coefficient,
-        encoded_dim = wandb.config.encoded_dim,
-        learning_rate = wandb.config.learning_rate,
-        epoch_count = wandb.config.epoch_count,
-        batch_size = wandb.config.batch_size,
-        patience = wandb.config.patience,
-    )
+# def vae_sweep():
+#     """
+#     Input config options for wandb sweep.
+#     """
+#     wandb.init(entity='nrderus', project='VAE-sweep')
+#     return dict(
+#         kl_coefficient = wandb.config.kl_coefficient,
+#         encoded_dim = wandb.config.encoded_dim,
+#         learning_rate = wandb.config.learning_rate,
+#         epoch_count = wandb.config.epoch_count,
+#         batch_size = wandb.config.batch_size,
+#         patience = wandb.config.patience,
+#     )
 
 def add_dict_to_argparser(parser, default_dict):
     for k, v in default_dict.items():
