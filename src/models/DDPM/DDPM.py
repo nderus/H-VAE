@@ -60,11 +60,12 @@ def sinusoidal_embedding(x, embedding_max_frequency = 1000.0, embedding_dims=128
             [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3 )
         return embeddings
  
-def get_network(image_size, widths, block_depth):
+def get_network(image_size, widths, block_depth, embedding_dims):
     noisy_images = keras.Input(shape=(image_size, image_size, 3))
     noise_variances = keras.Input(shape=(1, 1, 1))
 
-    e = layers.Lambda(sinusoidal_embedding)(noise_variances)
+   # e = layers.Lambda(sinusoidal_embedding)(noise_variances)
+    e = layers.Lambda(lambda x: sinusoidal_embedding(x, embedding_max_frequency=1000.0, embedding_dims=embedding_dims))(noise_variances)
     e = layers.UpSampling2D(size=image_size, interpolation="nearest")(e)
 
     x = layers.Conv2D(widths[0], kernel_size=1)(noisy_images)
@@ -89,7 +90,7 @@ def get_network(image_size, widths, block_depth):
 
 class DiffusionModel(keras.Model):
     def __init__(self, image_size, widths, block_depth, batch_size, min_signal_rate, max_signal_rate,
-                 cvae, kid_diffusion_steps, plot_diffusion_steps, ema, encoded_dim, kid_image_size):
+                 cvae, kid_diffusion_steps, plot_diffusion_steps, ema, encoded_dim, kid_image_size, embedding_dims):
         super().__init__()
         self.image_size = image_size
         self.batch_size = batch_size
@@ -101,8 +102,9 @@ class DiffusionModel(keras.Model):
         self.ema = ema
         self.encoded_dim = encoded_dim
         self.kid_image_size = kid_image_size
+        self.embedding_dims = embedding_dims
         self.normalizer = layers.Normalization()
-        self.network = get_network(image_size, widths, block_depth)
+        self.network = get_network(image_size, widths, block_depth, self.embedding_dims)
         self.ema_network = keras.models.clone_model(self.network)
 
     def compile(self, **kwargs):

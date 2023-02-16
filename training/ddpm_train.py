@@ -40,7 +40,8 @@ def main(cvae, cvae_encoded_dim):
                            plot_diffusion_steps = args.plot_diffusion_steps,
                            encoded_dim = cvae_encoded_dim,
                            ema = args.ema, 
-                           kid_image_size= args.kid_image_size
+                           kid_image_size= args.kid_image_size,
+                           embedding_dims= args.embedding_dims,
                            )
   
     model.compile(
