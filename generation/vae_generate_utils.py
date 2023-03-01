@@ -10,7 +10,7 @@ def vae_generate_defaults():
         encoded_dim = 1024 + 2048,
         learning_rate = 0.0001,
         batch_size = 32,
-        num_samples = 100,
+        num_samples = 10000,
         ddpm_refiner = True,
     )
 

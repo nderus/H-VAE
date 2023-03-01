@@ -11,11 +11,13 @@ from training.ddpm_train_utils import add_dict_to_argparser
 from training.ddpm_train_utils import preprocess_image
 from training.ddpm_train_utils import ddpm_sweep
 from wandb.keras import WandbCallback
+import wandb
 
 def main(cvae, cvae_encoded_dim):
   
     args = create_argparser().parse_args()
     builder = tfds.builder_from_directory('datasets/=/histo/1.0.0')
+    
     # Construct the tf.data.Dataset pipeline
     train_ds, val_ds = builder.as_dataset(split = ["cancer[:60000]",
                                                   "cancer[60000:70000]"],
@@ -29,27 +31,36 @@ def main(cvae, cvae_encoded_dim):
     val_ds = val_ds.repeat(args.dataset_repetitions).shuffle(10 * args.batch_size)
     val_ds = val_ds.batch(args.batch_size, drop_remainder = True).prefetch(buffer_size = tf.data.AUTOTUNE)
     # create and compile the model
-    model = DiffusionModel(image_size = args.image_size,
-                           widths = args.widths, 
-                           block_depth = args.block_depth, 
-                           batch_size = args.batch_size,
-                           min_signal_rate = args.min_signal_rate, 
-                           max_signal_rate = args.max_signal_rate, 
-                           cvae = cvae,
-                           kid_diffusion_steps = args.kid_diffusion_steps, 
-                           plot_diffusion_steps = args.plot_diffusion_steps,
-                           encoded_dim = cvae_encoded_dim,
-                           ema = args.ema, 
-                           kid_image_size= args.kid_image_size,
-                           embedding_dims= args.embedding_dims,
-                           )
+    print(args.batch_size)  
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        model = DiffusionModel(image_size = args.image_size,
+                               widths = args.widths, 
+                               block_depth = args.block_depth, 
+                               batch_size = args.batch_size,
+                               min_signal_rate = args.min_signal_rate, 
+                               max_signal_rate = args.max_signal_rate, 
+                               cvae = cvae,
+                               kid_diffusion_steps = args.kid_diffusion_steps, 
+                               plot_diffusion_steps = args.plot_diffusion_steps,
+                               encoded_dim = cvae_encoded_dim,
+                               ema = args.ema, 
+                               kid_image_size= args.kid_image_size,
+                               embedding_dims= args.embedding_dims,
+                               )
   
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=args.learning_rate,
         ),
         loss=keras.losses.mean_absolute_error,
-    )
+     )
+    #model.compile(
+    #    optimizer=keras.optimizers.experimental.AdamW(
+    #    learning_rate=args.learning_rate, weight_decay=args.weight_decay, 
+    #    ),
+    #    loss=keras.losses.mean_absolute_error,
+    #    )
 
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath = args.checkpoint_path,
@@ -65,7 +76,11 @@ def main(cvae, cvae_encoded_dim):
     if args.train_from_checkpoint:
         model.load_weights(args.checkpoint_path)
 
+    early_stop = keras.callbacks.EarlyStopping(monitor = 'val_i_loss',
+            patience = 10, restore_best_weights = False)
     # run training and plot generated images periodically
+    
+
     model.fit(
         train_ds,
         epochs = args.num_epochs,
@@ -74,11 +89,14 @@ def main(cvae, cvae_encoded_dim):
             keras.callbacks.LambdaCallback(on_epoch_end = model.plot_images),
             checkpoint_callback,
             WandbCallback(save_model = False),
+            early_stop,
         ],
     )
 
+
     model.load_weights(args.checkpoint_path)
-    model.plot_images(wandb_log = True)
+    model.plot_images(wandb_log = True, vae_images=True)
+    wandb.finish(exit_code=0, quiet = True)
 
 def create_argparser():
     defaults = dict(
@@ -103,7 +121,7 @@ def create_argparser():
         train_from_checkpoint = False,  
     )
     defaults.update(ddpm_defaults())
-    defaults.update(ddpm_sweep())
+    #defaults.update(ddpm_sweep())
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser

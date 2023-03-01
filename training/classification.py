@@ -26,8 +26,17 @@ def main():
 
     data = data_loader(name = 'histo', root_folder='datasets/')
 
-    if args.synthetic_data:
+    if args.vae_synthetic_data:
+        print("Adding VAE synthetic images \n")
         synthetic_x = np.load('datasets/synthetic/vae_synthetic_dataset.npy', allow_pickle=True)
+        synthetic_x = np.concatenate(synthetic_x, axis=0)
+        data['train_x'] = np.concatenate([data['train_x'], synthetic_x], axis=0)
+        synthetic_y = np.repeat(1, len(synthetic_x))
+        data['train_y'] = np.concatenate([data['train_y'], synthetic_y], axis=0)
+
+    if args.ddpm_synthetic_data:
+        print("Adding DDPM synthetic images \n")
+        synthetic_x = np.load('datasets/synthetic/ddpm_synthetic_dataset.npy', allow_pickle=True)
         synthetic_x = np.concatenate(synthetic_x, axis=0)
         data['train_x'] = np.concatenate([data['train_x'], synthetic_x], axis=0)
         synthetic_y = np.repeat(1, len(synthetic_x))
@@ -43,13 +52,14 @@ def main():
     val_y_label = [args.class_names[i] for i in data['val_y']]
 
     model = CNN((48, 48, 3), 2)
-    model.summary()
 
-    optimizer=keras.optimizers.Adam()
+    optimizer=keras.optimizers.Adam(learning_rate=args.learning_rate)
     model.compile(optimizer = optimizer, loss='binary_crossentropy', metrics=METRICS)
+    
+    early_stop = keras.callbacks.EarlyStopping(monitor = 'val_f1_score', patience = 10)
 
     history = model.fit(data['train_x'], train_y_one_hot, args.batch_size, args.epoch_count,
-            validation_data = (data['val_x'], val_y_one_hot))
+            validation_data = (data['val_x'], val_y_one_hot), callbacks=[early_stop])
 
     Train_Val_Plot(history.history['accuracy'],history.history['val_accuracy'],
                 history.history['loss'],history.history['val_loss'],
@@ -58,22 +68,22 @@ def main():
                 history.history['f1_score'],history.history['val_f1_score'])
 
     test_conf_pred = model.predict(data['test_x'])
-    print('Output predictions shape: ',test_conf_pred.shape)
+    print('Test set - Output predictions shape: ',test_conf_pred.shape)
 
     test_y_pred = np.argsort(test_conf_pred, axis=1)[:,-1]
-    print('Class predictions shape: ',test_y_pred.shape)
+    print('Test set - Class predictions shape: ',test_y_pred.shape)
 
     test_conf_pred = model.predict(data['val_x'])
-    print('Output predictions shape: ',test_conf_pred.shape)
+    print('Val set - Output predictions shape: ',test_conf_pred.shape)
 
     val_y_pred = np.argsort(test_conf_pred, axis=1)[:,-1]
-    print('Class predictions shape: ',val_y_pred.shape)
+    print('Val set - Class predictions shape: ',val_y_pred.shape)
 
-    conf_matrix = confusion_matrix(test_y_label, test_y_pred, normalize='all')
+    conf_matrix = confusion_matrix(data["test_y"], test_y_pred, normalize=None)
     print(conf_matrix)
     show_confusion_matrix(conf_matrix, args.class_names)
 
-    conf_matrix = confusion_matrix(val_y_label, val_y_pred, normalize=None)
+    conf_matrix = confusion_matrix(data["val_y"], val_y_pred, normalize=None)
     print(conf_matrix)
     show_confusion_matrix(conf_matrix, args.class_names)
 
@@ -94,7 +104,9 @@ def create_argparser():
         class_names = ('non-cancer','cancer'),
         batch_size = 250,
         epoch_count = 20,
-        synthetic_data = True,   
+        learning_rate = 0.001,
+        vae_synthetic_data = False,   
+        ddpm_synthetic_data = True,
     )
     defaults.update(cnn_defaults())
     parser = argparse.ArgumentParser()

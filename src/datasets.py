@@ -107,12 +107,14 @@ def data_loader(name, root_folder):
             else:
                 class1.append(filename)
 
-        random.seed(11)
-        sampled_class0 = random.sample(class0, 78000) # TO DO: use whole dataset
-        random.seed(11)
+        random.seed(123)
+        sampled_class0 = random.sample(class0, 120000) # TO DO: use whole dataset.was 78000
+        random.seed(123)
         sampled_class1 = random.sample(class1, 78000)
         class0_array = get_image_arrays(sampled_class0, 0)
         class1_array = get_image_arrays(sampled_class1, 1)
+        print("array class0 has length: {}".format(len(class0_array)))
+        print("array class1 has length: {}".format(len(class1_array)))
         combined_data = np.concatenate((class0_array, class1_array))
 
         X = []
@@ -124,14 +126,21 @@ def data_loader(name, root_folder):
         
         X = np.array(X).reshape(-1, 48, 48, 3) #was 64
         y = np.array(y)
-        train_x, test_x, train_y, test_y = train_test_split(X, y, test_size = 0.2, random_state=11, shuffle=False)
-        train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size = 0.25, random_state=11, shuffle=False)
+        train_x, test_x, train_y, test_y = train_test_split(X, y, test_size = 0.1, random_state=11, shuffle=True) # was 0.2
+        train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size = 0.5, random_state=11, shuffle=True) # was 0.25
         train_y_one_hot = to_categorical(train_y, category_count)
         test_y_one_hot = to_categorical(test_y, category_count)
         val_y_one_hot = to_categorical(val_y, category_count) 
         input_shape = (48, 48, 3) #was 64
-                              
+        
+        print("train_y - n of class 1: {}".format(np.sum(train_y)))  
+        
+        print("test_y - n of class 1: {}".format(np.sum(test_y)))  
+        
+        print("val_y - n of class 1: {}".format(np.sum(val_y)))  
+        
         labels = ['non-cancer','cancer']
+
     
     elif name.lower() == 'experimental':
   
@@ -158,7 +167,8 @@ def data_loader(name, root_folder):
 
     else:
         raise Exception('No such dataset called {}.'.format(name))
-
+        
+        
     return dict(train_x = resize(train_x),
                test_x = resize(test_x),
                val_x = resize(val_x),

@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import layers
 import numpy as np
+from tqdm import tqdm
 from tensorflow.keras import regularizers
 from src.models.VAE.CVAE import CVAE
 from src.models.VAE.encoders import EncoderResNet18, EncoderResNet34, EncoderResNet50, encoderCNN, EncoderMixNet18
@@ -42,7 +43,7 @@ def main():
 
     def vae_generate(num_images):
         initial_noise = tf.random.normal( mean=0., stddev=1.0, shape=(num_images, args.encoded_dim)) 
-        condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
+        condition = tf.convert_to_tensor(np.array([0, 1], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
         condition = tf.repeat(condition, repeats = [num_images], axis=0)
         initial_noise = layers.Concatenate()([initial_noise, condition])
@@ -50,7 +51,7 @@ def main():
     
     batches = args.num_samples // args.batch_size
 
-    result = [vae_generate(args.batch_size) for _ in range(batches)]
+    result = [vae_generate(args.batch_size) for _ in tqdm(range(batches), desc="Generating images (VAE)")]
     result.append(vae_generate(args.num_samples % args.batch_size))
 
     print('Generated {} images in {} batches of {} + a minibatch of {}'.format(args.num_samples, 

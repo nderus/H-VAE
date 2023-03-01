@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
 import numpy as np
+from tqdm import tqdm
 from src.models.DDPM.DDPM import DiffusionModel
 from generation.ddpm_generate_utils import ddpm_defaults
 from generation.ddpm_generate_utils import add_dict_to_argparser
@@ -28,6 +29,7 @@ def main(cvae, cvae_encoded_dim):
     val_ds = val_ds.repeat(args.dataset_repetitions).shuffle(10 * args.batch_size)
     val_ds = val_ds.batch(args.batch_size, drop_remainder = True).prefetch(buffer_size = tf.data.AUTOTUNE)
     # create and compile the model
+
     model = DiffusionModel(image_size = args.image_size,
                            widths = args.widths, 
                            block_depth = args.block_depth, 
@@ -39,9 +41,9 @@ def main(cvae, cvae_encoded_dim):
                            plot_diffusion_steps = args.plot_diffusion_steps,
                            encoded_dim = cvae_encoded_dim,
                            ema = args.ema, 
-                           kid_image_size= args.kid_image_size
+                           kid_image_size= args.kid_image_size,
+                           embedding_dims= args.embedding_dims,
                            )
-  
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=args.learning_rate,
@@ -55,7 +57,7 @@ def main(cvae, cvae_encoded_dim):
 
     batches = args.num_samples // args.batch_size
 
-    result = [model.generate(args.batch_size, args.plot_diffusion_steps) for _ in range(batches)]
+    result = [model.generate(args.batch_size, args.plot_diffusion_steps) for _ in tqdm(range(batches), desc="Generating images (Diffusion)")]
     result.append(model.generate(args.num_samples % args.batch_size, args.plot_diffusion_steps))
 
     print('Generated {} images in {} batches of {} + a minibatch of {}'.format(args.num_samples, 

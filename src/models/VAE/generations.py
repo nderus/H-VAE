@@ -131,7 +131,7 @@ class Generations:
 
         if (self.category_count <= 10):
             for i in range(self.category_count):
-                self.generations_class(i)
+                self.generations_class(digit_label=i)
 
         else:
             print('generations for celeba beta')

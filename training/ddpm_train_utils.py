@@ -10,23 +10,23 @@ def ddpm_defaults():
     """
     return dict(
         dataset_name = 'histo',
-        dataset_repetitions = 15,
+        dataset_repetitions = 1,
         num_epochs = 100, 
         image_size = 48,
         kid_image_size = 75,
         kid_diffusion_steps = 5,
-        plot_diffusion_steps = 1000,
-        min_signal_rate = 0.15,
+        plot_diffusion_steps = 80,
+        min_signal_rate = 0.15, #0.060181157943765454
         max_signal_rate = 0.95,
-        embedding_dims = 512,
+        embedding_dims = 256, 
         embedding_max_frequency = 1000.0,
-        widths = [32, 64, 96, 128, 256],
-        block_depth = 4,
-        batch_size = 64,
+        widths = [32, 64, 96, 128],
+        block_depth = 3,
+        batch_size = 64 * 2,
         ema = 0.999,
-        learning_rate = 1e-3,
+        learning_rate = 0.0000929915865312801,
         weight_decay = 1e-4,     
-        checkpoint_path = "/checkpoints/diffusion_model",
+        checkpoint_path = "/workspace/H-VAE/checkpoints/diffusion_model",
         train_from_checkpoint = False,  
 
     )
@@ -38,7 +38,7 @@ def ddpm_sweep():
     wandb.init(entity='nrderus', project='DDPM-sweep')
     return dict(
         block_depth = wandb.config.block_depth,
-        batch_size = wandb.config.batch_size,
+        #batch_size = wandb.config.batch_size,
         min_signal_rate = wandb.config.min_signal_rate,
         embedding_dims = wandb.config.embedding_dims,
         learning_rate = wandb.config.learning_rate,

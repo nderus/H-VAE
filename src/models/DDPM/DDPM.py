@@ -81,11 +81,9 @@ def get_network(image_size, widths, block_depth, embedding_dims):
     for width in reversed(widths[:-1]):
         x = UpBlock(width, block_depth)([x, skips])
 
-    layer = tf.keras.layers.MultiHeadAttention(num_heads=4, key_dim=128, attention_axes=(2, 3)) #added, was , num_heads=8, key_dim=16
+    layer = tf.keras.layers.MultiHeadAttention(num_heads=8, key_dim=128, attention_axes=(2, 3)) #added, was , num_heads=8,key_dim=16
     output_tensor = layer(x, x) #added
     x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(output_tensor)
-
-
     return keras.Model([noisy_images, noise_variances], x, name="residual_unet") #changed output
 
 class DiffusionModel(keras.Model):
@@ -193,18 +191,19 @@ class DiffusionModel(keras.Model):
 
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=True)
-        noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
+        noises = tf.random.normal(shape=(int(self.batch_size / 2), self.image_size, self.image_size, 3))
         condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
-        condition = tf.repeat(condition, repeats = [self.batch_size], axis=0)
+        condition = tf.repeat(condition, repeats = [int(self.batch_size / 2)], axis=0)
         reconstructions = self.cvae([images, condition])
 
         # sample uniform random diffusion times
         diffusion_times = tf.random.uniform(
-            shape=(self.batch_size, 1, 1, 1), minval=0.0, maxval=1.0
+            shape=(int(self.batch_size / 2), 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
         # mix the images with noises accordingly
+        
         noisy_images = signal_rates * images + noise_rates * noises + reconstructions
 
         with tf.GradientTape() as tape:
@@ -234,15 +233,15 @@ class DiffusionModel(keras.Model):
           images = images[0]
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=False)
-        noises = tf.random.normal(shape=(self.batch_size, self.image_size, self.image_size, 3))
-        condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
+        noises = tf.random.normal(shape=(int(self.batch_size / 2), self.image_size, self.image_size, 3))
+        condition = tf.convert_to_tensor(np.array([0, 1], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
-        condition = tf.repeat(condition, repeats = [self.batch_size], axis=0)
+        condition = tf.repeat(condition, repeats = [int(self.batch_size / 2)], axis=0)
         reconstructions = self.cvae([images, condition])
       
         # sample uniform random diffusion times
         diffusion_times = tf.random.uniform(
-            shape=(self.batch_size, 1, 1, 1), minval=0.0, maxval=1.0
+            shape=(int(self.batch_size / 2), 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
         # mix the images with noises accordingly
@@ -265,16 +264,16 @@ class DiffusionModel(keras.Model):
         # this is computationally demanding, kid_diffusion_steps has to be small
         images = self.denormalize(images)
 
-        generated_images = self.generate(
-            num_images=self.batch_size, diffusion_steps=self.kid_diffusion_steps
+        generated_images, _ = self.generate(
+            num_images= int(self.batch_size / 2), diffusion_steps=self.kid_diffusion_steps
         )
         self.kid.update_state(images, generated_images)
 
         return {m.name: m.result() for m in self.metrics}
 
-    def plot_images(self, epoch=None, logs=None, num_rows=1, num_cols=6, save = True, wandb_log = False):
+    def plot_images(self, epoch=None, logs=None, num_rows=1, num_cols=6, save = False, wandb_log = True, vae_images = False):
         # plot random generated images for visual evaluation of generation quality
-        generated_images = self.generate(
+        generated_images, y = self.generate(
             num_images=num_rows * num_cols,
             diffusion_steps=self.plot_diffusion_steps,
         )
@@ -287,17 +286,28 @@ class DiffusionModel(keras.Model):
                 plt.axis("off")
         plt.tight_layout()
         if save:
-          plt.savefig('/content/drive/MyDrive/plot_images/plot_images_diffusion_conditional.png')
+          plt.savefig('plot_images/plot_images_diffusion_conditional.png')
         if wandb_log:
           wandb.log({"Images": wandb.Image(plt, caption="Diffusion images") })
-
         plt.show()
         plt.close()
+        
+        if vae_images:
+            plt.figure(figsize=(num_cols * 2.0, num_rows * 2.0))
+            for row in range(num_rows):
+                for col in range(num_cols):
+                    index = row * num_cols + col
+                    plt.subplot(num_rows, num_cols, index + 1)
+                    plt.imshow(y[index])
+                    plt.axis("off")
+            plt.tight_layout()
+            wandb.log({"Images": wandb.Image(plt, caption="VAE images") })
+            plt.close()
 
     def generate(self, num_images, diffusion_steps):
         # noise -> images -> denormalized images 
         initial_noise =  tf.random.normal(  mean=0., stddev=1.0, shape=(num_images, self.encoded_dim)) 
-        condition = tf.convert_to_tensor(np.array([1, 0], dtype='float32'))
+        condition = tf.convert_to_tensor(np.array([0, 1], dtype='float32'))
         condition = tf.reshape(condition, shape=(1,2))
         condition = tf.repeat(condition, repeats = [num_images], axis=0)
         initial_noise = layers.Concatenate()([initial_noise, condition])
@@ -307,5 +317,6 @@ class DiffusionModel(keras.Model):
         x_t = tf.random.normal(mean = y, shape=(num_images, self.image_size, self.image_size, 3))
   
         generated_images = self.reverse_diffusion(x_t, diffusion_steps, y)
+        generated_images = generated_images - y
         generated_images = self.denormalize(generated_images)
-        return generated_images
+        return generated_images, y

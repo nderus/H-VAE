@@ -2,6 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import regularizers
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,9 +15,11 @@ def cnn_defaults():
         dataset_name = 'histo',
         model_name = 'CNN',
         class_names = ('non-cancer','cancer'),
-        batch_size = 250,
-        epoch_count = 1,
-        synthetic_data = True,        
+        batch_size = 64, #was 250
+        epoch_count = 100,
+        learning_rate =  10e-4,
+        vae_synthetic_data = True,  
+        ddpm_synthetic_data = False,
     )
 
 def add_dict_to_argparser(parser, default_dict):
@@ -102,68 +105,110 @@ def show_confusion_matrix(conf_matrix,class_names,figsize=(10,10)):
         text = ax.text(j, i, '{0:.1%}'.format(conf_matrix[i, j]),
                        ha='center', va='center', color='w')
         
+        
 def CNN(input_shape=(48, 48, 3), output_class_count=2):
+                
+    inputs = layers.Input(shape=input_shape,name='Input')
+
+    x = base_model.get_layer('block1_conv1')(inputs)
+    x.trainable=True
+
+    x = base_model.get_layer('block1_conv2')(x)
+    x.trainable=True
+
+
+    x = layers.Conv2D(filters=6, kernel_size=5, strides=1,padding='valid',name='conv1_1')(x)
+    #x = layers.Conv2D(filters=6, kernel_size=5, strides=1,padding='same',name='conv1_2')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
+    x = layers.MaxPool2D(pool_size=2, strides=2,name='S1')(x)
+    
+
+# layer 2
+    x = layers.Conv2D(filters=16, kernel_size=5,strides=1,padding='valid',name='conv2_1')(x)
+    #x = layers.Conv2D(filters=16, kernel_size=5,strides=1,padding='same',name='conv2_2')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
+    x = layers.MaxPool2D(pool_size=2, strides=2,name='S2')(x)
+    
+
+# layer 3
+    x = layers.Conv2D(filters=120, kernel_size=5, strides=1,padding='valid',name='conv3_1')(x)
+   # x = layers.Conv2D(filters=120, kernel_size=5, strides=1,padding='same',name='conv3_2')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
+
+    x = layers.Flatten()(x)
+
+    x = layers.Dropout(0.1)(x)
+    x = layers.Dense(84, activation='relu',name='F6')(x)
+    outputs = layers.Dense(units=output_class_count,activation='softmax',name='Output')(x)
+    
+    model = keras.Model(inputs, outputs)
+    return model
+        
+def CNN2(input_shape=(48, 48, 3), output_class_count=2):
     
     inputs = layers.Input(shape=input_shape,name='Input')
     #block 1 - pretrained
     x = base_model.get_layer('block1_conv1')(inputs)
-    x.trainable=False
+    x.trainable=True
 
     x = base_model.get_layer('block1_conv2')(x)
-    x.trainable=False
+    x.trainable=True
 
     # block 2
-    x = layers.Conv2D(128, (3, 3),
+    x = layers.Conv2D(32, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block2_conv1')(x)
+                      name='block2_conv1', kernel_regularizer=regularizers.L2(.01))(x)
 
-    x = layers.Conv2D(128, (3, 3),
+    x = layers.Conv2D(32, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block2_conv2')(x)
+                      name='block2_conv2', kernel_regularizer=regularizers.L2(.01))(x)
     
     x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')(x)
     x = layers.BatchNormalization()(x)
 
 # Block 3
-    x = layers.Conv2D(256, (3, 3),
+    x = layers.Conv2D(64, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block3_conv1')(x)
-    x = layers.Conv2D(256, (3, 3),
+                      name='block3_conv1', kernel_regularizer=regularizers.L2(.01))(x)
+    x = layers.Conv2D(64, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block3_conv2')(x)
-    x = layers.Conv2D(256, (3, 3),
+                      name='block3_conv2', kernel_regularizer=regularizers.L2(.01))(x)
+    x = layers.Conv2D(64, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block3_conv3')(x)
+                      name='block3_conv3', kernel_regularizer=regularizers.L2(.01))(x)
     x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')(x)
     x = layers.BatchNormalization()(x)
 
       # Block 4
-    x = layers.Conv2D(512, (3, 3),
+    x = layers.Conv2D(128, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block4_conv1')(x)
-    x = layers.Conv2D(512, (3, 3),
+                      name='block4_conv1', kernel_regularizer=regularizers.L2(.01))(x)
+    x = layers.Conv2D(128, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block4_conv2')(x)
-    x = layers.Conv2D(512, (3, 3),
+                      name='block4_conv2', kernel_regularizer=regularizers.L2(.01))(x)
+    x = layers.Conv2D(128, (3, 3),
                       activation='relu',
                       padding='same',
-                      name='block4_conv3')(x)
+                      name='block4_conv3', kernel_regularizer=regularizers.L2(.01))(x)
     x = layers.MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool')(x)
     x = layers.BatchNormalization()(x)
 
     # classifier
     x = layers.Flatten()(x)
     
-    x = layers.Dense(120, activation='relu',name='dense1')(x)
-    x = layers.Dropout(0.1)(x)
-    x = layers.Dense(120, activation='relu', name='dense2')(x)
+    x = layers.Dense(84, activation='relu',name='dense1')(x)
+    x = layers.Dropout(0.2)(x)
+    x = layers.Dense(84, activation='relu', name='dense2')(x)
     outputs = layers.Dense(units=output_class_count,activation='softmax',name='Output')(x)
 
     model = keras.Model(inputs, outputs)

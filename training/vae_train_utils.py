@@ -11,33 +11,53 @@ def vae_defaults():
         kl_coefficient = .03,
         encoded_dim = 1024 + 2048,
         learning_rate = 0.0001,
-        epoch_count = 1,
+        epoch_count = 100,
         batch_size = 100,
-        patience = 1,
-        wandb_logging = False,
+        patience = 10,
+        wandb_logging = True,
         embeddings = False,
-        reconstructions = False,
-        generations = False,
+        reconstructions = True,
+        generations = True,
         activations = False,
         gradcam = False,
         gradcamHQ = False,
-        ddpm_refiner = False,
+        ddpm_refiner = True,
         
     )
 
-# def vae_sweep():
-#     """
-#     Input config options for wandb sweep.
-#     """
-#     wandb.init(entity='nrderus', project='VAE-sweep')
-#     return dict(
-#         kl_coefficient = wandb.config.kl_coefficient,
-#         encoded_dim = wandb.config.encoded_dim,
-#         learning_rate = wandb.config.learning_rate,
-#         epoch_count = wandb.config.epoch_count,
-#         batch_size = wandb.config.batch_size,
-#         patience = wandb.config.patience,
-#     )
+def vae_sweep():
+    """
+    Input config options for wandb sweep.
+    """
+    sweep_configuration = {
+        'method': 'random',
+        'name': 'sweep',
+        'metric': {'goal': 'maximize', 'name': 'val_acc'},
+        'parameters': 
+        {   
+            'kl_coefficient' : {0, 0.0005, 0.05, 1},
+            'encoded_dim' : {1024, 2048, 1024 + 2048},
+            'learning_rate' : {0.0001},
+            'epoch_count' : {1},
+            'batch_size' : {100},
+            'patience' : {1},
+        }
+
+    }
+
+    wandb.init(config=sweep_configuration)
+    wandb.init()
+    wandb.sweep(sweep=sweep_configuration, project='VAE-sweep')
+    #sweep_id = wandb.sweep(sweep=sweep_configuration, project='my-first-sweep')
+
+    return dict(
+        kl_coefficient = wandb.config.kl_coefficient,
+        encoded_dim = wandb.config.encoded_dim,
+        learning_rate = wandb.config.learning_rate,
+        epoch_count = wandb.config.epoch_count,
+        batch_size = wandb.config.batch_size,
+        patience = wandb.config.patience,     
+    )
 
 def add_dict_to_argparser(parser, default_dict):
     for k, v in default_dict.items():

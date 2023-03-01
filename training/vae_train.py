@@ -77,14 +77,14 @@ def main():
 
   # (TO DO: function fit model)
   #NB: save_weights_only -> ValueError: Unable to create dataset (name a
-  history = cvae.fit([data['train_x'], data['train_y_one_hot']],
-                   validation_data = ([data['val_x'], data['val_y_one_hot']],None),
-                   epochs = args.epoch_count,
-                   batch_size = args.batch_size,
-                   callbacks=[early_stop, WandbCallback(save_model = False) ]) 
+ # history = cvae.fit([data['train_x'], data['train_y_one_hot']],
+ #                  validation_data = ([data['val_x'], data['val_y_one_hot']],None),
+ #                  epochs = args.epoch_count,
+ #                  batch_size = args.batch_size,
+ #                  callbacks=[early_stop, WandbCallback(save_model = False) ]) 
   
-  cvae.encoder.save_weights('checkpoints/VAE/encoder_weights2.h5')
-  cvae.decoder.save_weights('checkpoints/VAE/decoder_weights2.h5')
+  #cvae.encoder.save_weights('checkpoints/VAE/encoder_weights2.h5')
+  #cvae.decoder.save_weights('checkpoints/VAE/decoder_weights2.h5')
 
   _, input_label_train, train_input = cvae.conditional_input([data['train_x'][:1000], data['train_y_one_hot'][:1000]])
   _, input_label_test, test_input = cvae.conditional_input([data['test_x'][:1000], data['test_y_one_hot'][:1000]])
@@ -128,11 +128,11 @@ def main():
     gc = GradCam(cvae, data['test_x'], data['test_y_one_hot'], HQ = True, target_layer = target_layer)
     gc.gradcam()
 
-  wandb.finish(exit_code=0, quiet = True)
+  #wandb.finish(exit_code=0, quiet = True)
 
   if args.ddpm_refiner:
-    #cvae.encoder.load_weights('checkpoints/VAE/encoder_weights2.h5')
-    #cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
+    cvae.encoder.load_weights('checkpoints/VAE/encoder_weights2.h5')
+    cvae.decoder.load_weights('checkpoints/VAE/decoder_weights2.h5')
     from training.ddpm_train import main as ddpm
     ddpm(cvae, args.encoded_dim)
 
